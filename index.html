@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="manifest" href="./manifest.json">
+
+    <meta name="theme-color" content="#ffffff">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AL CREANCE">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام إدارة الديون - AL CREANCE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            background-color: #f1f5f9;
+            direction: rtl; 
+            color: #1e293b;
+            font-size: 14px;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .top-nav { background-color: #ffffff; border-bottom: 1px solid #e2e8f0; }
+        
+        /* ========================================= */
+        /* ⭐ تحسينات الجدول للموبايل (نظام الطي) ⭐ */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            .excel-table thead { display: none; } /* إخفاء رأس الجدول */
+            .excel-table, .excel-table tbody, .excel-table tr, .excel-table td { display: block; width: 100%; }
+            
+            /* تنسيق البطاقة (السطر) */
+            .excel-table tr {
+                margin-bottom: 0.75rem;
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.75rem;
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                overflow: hidden; /* لضمان احتواء العناصر الداخلية */
+                cursor: pointer; /* مؤشر اليد */
+                transition: all 0.3s ease;
+            }
+
+            /* تنسيق الخلايا */
+            .excel-table td {
+                text-align: left;
+                padding: 0.75rem 1rem;
+                position: relative;
+                border-bottom: 1px solid #f1f5f9;
+                display: flex; /* افتراضياً تظهر كـ flex */
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.95rem;
+            }
+
+            /* إضافة العناوين قبل القيم */
+            .excel-table td::before {
+                content: attr(data-label);
+                font-weight: 700; color: #64748b; font-size: 0.8rem; margin-left: auto; order: -1;
+            }
+
+            /* --- منطق الإخفاء والإظهار --- */
+            
+            /* 1. إخفاء التفاصيل افتراضياً */
+            .excel-table td.mobile-detail {
+                display: none; /* مخفي */
+                background-color: #f8fafc; /* لون خلفية مختلف قليلاً للتفاصيل */
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
+                border-bottom-color: #e2e8f0;
+            }
+
+            /* 2. تنسيق الملخص (الظاهر دائماً) */
+            .excel-table td.mobile-summary {
+                border-bottom: none; /* إزالة الحدود بين عناصر الملخص */
+                padding-top: 0.5rem;
+                padding-bottom: 0.5rem;
+            }
+            /* تمييز المبلغ في الملخص */
+            .excel-table td.mobile-summary[data-label="المبلغ"] {
+                 font-weight: 800; color: #0f172a; font-family: 'ui-monospace', monospace;
+            }
+
+            /* 3. عند توسيع السطر (إضافة كلاس expanded) */
+            .excel-table tr.expanded {
+                border-color: #3b82f6; /* تغيير لون حدود البطاقة عند الفتح */
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            }
+            /* إظهار التفاصيل */
+            .excel-table tr.expanded td.mobile-detail {
+                display: flex; /* يصبح ظاهراً */
+                animation: slideDown 0.3s ease-out;
+            }
+             /* إضافة فاصل قبل أول عنصر تفاصيل */
+            .excel-table tr.expanded td.mobile-detail:first-of-type {
+                border-top: 2px solid #f1f5f9;
+                margin-top: 0.5rem;
+            }
+
+            /* تدوير أيقونة السهم */
+            .expand-icon { transition: transform 0.3s ease; }
+            .excel-table tr.expanded .expand-icon { transform: rotate(180deg); }
+            
+            /* إخفاء تسمية عمود الإجراءات */
+            .excel-table td:last-child::before { display: none; }
+             .excel-table td:last-child { justify-content: center; padding-top: 1rem; padding-bottom: 1rem; background-color: #f8fafc;}
+
+             /* تذييل الجدول على الموبايل */
+             .excel-table tfoot { display: block; margin-top: 1rem;}
+             .excel-table tfoot tr { display: flex; flex-direction: column; border: none; border-top: 3px solid #3b82f6; background: #f8fafc; border-radius: 0.75rem; overflow: hidden;}
+             .excel-table tfoot td { display: flex; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        }
+
+        /* تنسيقات سطح المكتب */
+        @media (min-width: 769px) {
+            .excel-table th { cursor: pointer; user-select: none; transition: background 0.2s; font-weight: 700; letter-spacing: 0.025em; padding: 12px; font-size: 0.85rem;}
+            .excel-table th:hover { background-color: #f1f5f9; }
+            .excel-cell { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+            /* إخفاء أيقونة التوسيع على الديسكتوب */
+            .expand-icon-container { display: none; }
+        }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        input[type="date"], input[type="number"], .font-mono { font-family: 'ui-monospace', monospace; text-align: left; direction: ltr; }
+        .hidden-force { display: none !important; }
+        select.custom-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: left 0.5rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em; padding-left: 2rem; -webkit-appearance: none; appearance: none; }
+        .fade-in { animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        #debt-dropdown-menu { max-height: 350px; overflow-y: auto; }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+</head>
+<body class="bg-slate-100 safe-area-inset">
+    
+    <nav class="top-nav p-2 sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm">
+        <div class="container mx-auto flex flex-row justify-between items-center md:px-4">
+            <div class="text-lg font-bold text-slate-800 flex items-center">
+                <span class="text-2xl ml-1.5 filter drop-shadow-sm">📊</span>
+                <div class="flex flex-col -space-y-0.5">
+                    <span class="leading-tight tracking-tight text-blue-700">AL CREANCE</span>
+                    <span class="text-[9px] text-slate-500 font-semibold opacity-80">Multi-DB System</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 space-x-reverse flex-1 justify-end md:justify-center max-w-md ml-auto">
+                
+                <div class="relative group bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 flex items-center">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                    <select id="db-selector" onchange="changeDatabase(this.value)" class="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 p-0 pr-6 cursor-pointer outline-none w-full" style="-webkit-appearance: none; appearance: none;">
+                        </select>
+                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1 text-slate-400"><svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></div>
+                </div>
+
+                <div class="relative" id="debt-dropdown-container">
+                    <button onclick="toggleDebtDropdown()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-bold text-xs flex items-center border border-red-100 relative whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span class="hidden sm:inline">المتعثرين</span>
+                        <span id="debt-count-badge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">0</span>
+                    </button>
+
+                    <div id="debt-dropdown-menu" class="hidden absolute left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-slate-100 z-50 fade-in origin-top-left">
+                        <div class="p-3 border-b border-slate-100 bg-slate-50 rounded-t-lg flex justify-between items-center">
+                             <h3 class="font-bold text-slate-700 text-sm">صافي الديون</h3>
+                             <span class="text-[10px] text-slate-500">(الأعلى أولاً)</span>
+                        </div>
+                        <ul id="debt-list-items" class="py-1 divide-y divide-slate-50 max-h-64 overflow-y-auto"></ul>
+                        <div id="no-debt-message" class="hidden p-4 text-center text-slate-500 text-xs font-medium">✅ لا توجد ديون متعثرة.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hidden md:flex items-center">
+                <button class="text-slate-500 hover:text-slate-700 p-2 hover:bg-slate-100 rounded-full transition" title="تسجيل الخروج">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-3 md:p-6 md:max-w-6xl">
+        
+        <header class="mb-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/80">
+            
+            <div class="flex justify-between items-center mb-4 md:mb-0">
+                <h2 class="text-base font-bold text-slate-700 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                    تصفية وبحث
+                </h2>
+                <button onclick="toggleFilters()" class="md:hidden text-slate-500 hover:text-blue-600 focus:outline-none text-xs font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center">
+                    <span id="filter-toggle-text">إظهار الفلاتر</span>
+                    <svg id="filter-toggle-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+            </div>
+            
+            <div id="filters-container" class="hidden md:block mt-4 md:mt-0">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">الزبون</label>
+                        <select id="customer-filter" onchange="filterInvoices()" class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs bg-white font-semibold text-slate-700">
+                            <option value="">الكل</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">من</label>
+                        <input type="date" id="date-from" oninput="filterInvoices()" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">إلى</label>
+                        <input type="date" id="date-to" oninput="filterInvoices()" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">الطريقة</label>
+                            <select id="payment-filter" onchange="filterInvoices()" class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs bg-white font-semibold text-slate-700">
+                                <option value="">الكل</option>
+                                <option value="نقداً">نقداً</option>
+                                <option value="شيك">شيك</option>
+                                <option value="تحويل بنكي">تحويل</option>
+                                <option value="بطاقة">بطاقة</option>
+                            </select>
+                    </div>
+                     <div>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1">الحالة</label>
+                            <select id="status-filter" onchange="filterInvoices()" class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs bg-white font-semibold text-slate-700">
+                                <option value="">الكل</option>
+                                <option value="paid">مسددة</option>
+                                <option value="partial">جزئي</option>
+                                <option value="unpaid">ديون</option>
+                                 <option value="check">شيكات</option>
+                            </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center pt-4 md:border-t md:border-slate-100 space-y-3 md:space-y-0 md:space-x-3 md:space-x-reverse">
+                <div class="w-full md:w-2/5 relative group">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <svg class="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                      </div>
+                    <input type="text" id="global-search" oninput="filterInvoices()" placeholder="بحث سريع..." class="w-full p-2 pr-9 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs shadow-sm transition">
+                </div>
+
+                <div class="flex w-full md:w-auto space-x-2 space-x-reverse">
+                    <button onclick="openModal()" class="flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition duration-200 flex items-center justify-center text-xs disabled:opacity-70 active:scale-[0.98]" id="add-invoice-button" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg> إضافة فاتورة
+                    </button>
+                    <button onclick="openCheckModal()" class="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-sm hover:bg-green-700 transition duration-200 flex items-center justify-center text-xs disabled:opacity-70 active:scale-[0.98]" id="add-check-button" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> إضافة شيك
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200/80 relative mt-4 overflow-hidden">
+             <div id="table-loading-overlay" class="absolute inset-0 bg-white/80 z-20 flex items-center justify-center hidden backdrop-blur-[1px]">
+                <div class="animate-spin rounded-full h-8 w-8 border-[3px] border-blue-600 border-t-transparent"></div>
+            </div>
+
+            <div class="md:overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 excel-table">
+                    <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600">
+                        <tr>
+                            <th onclick="sortData('customer')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">الزبون <span id="sort-customer" class="sort-icon"></span></th>
+                            <th onclick="sortData('date')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">التاريخ <span id="sort-date" class="sort-icon"></span></th>
+                            <th onclick="sortData('invoiceNum')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">رقم الوثيقة <span id="sort-invoiceNum" class="sort-icon"></span></th>
+                            <th onclick="sortData('amount')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">المبلغ <span id="sort-amount" class="sort-icon"></span></th>
+                            <th onclick="sortData('paymentMethod')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">الطريقة <span id="sort-paymentMethod" class="sort-icon"></span></th>
+                            <th onclick="sortData('paidAmount')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">المدفوع <span id="sort-paidAmount" class="sort-icon"></span></th>
+                            <th onclick="sortData('remaining')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">المتبقي (دين) <span id="sort-remaining" class="sort-icon"></span></th>
+                            <th class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-table-body" class="bg-white divide-y divide-slate-100">
+                        </tbody>
+                    <tfoot class="bg-slate-50 font-bold border-t-2 border-blue-500/50 text-xs">
+                        <tr>
+                            <td colspan="3" class="p-3 text-right text-slate-700 md:table-cell hidden">الإجمالي:</td>
+                             <td class="p-3 flex justify-between md:hidden"><span class="text-slate-500">الإجمالي:</span> <span id="total-amount-mobile" class="font-mono">0.00</span></td>
+                            <td id="total-amount" class="p-3 text-right text-slate-900 font-mono md:table-cell hidden">0.00</td>
+                            <td class="p-3 text-right md:table-cell hidden"></td>
+                             <td class="p-3 flex justify-between md:hidden"><span class="text-slate-500">المدفوع:</span> <span id="total-paid-mobile" class="font-mono">0.00</span></td>
+                            <td id="total-paid" class="p-3 text-right text-slate-900 font-mono md:table-cell hidden">0.00</td>
+                             <td class="p-3 flex justify-between md:hidden bg-red-50"><span class="text-red-700">صافي الديون:</span> <span id="total-remaining-mobile" class="font-mono text-red-600 font-extrabold">0.00</span></td>
+                            <td id="total-remaining" class="p-3 text-right text-sm text-red-600 font-extrabold font-mono md:table-cell hidden">0.00</td>
+                            <td class="p-3 text-right md:table-cell hidden"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <div id="loading-message" class="text-center p-8 mt-6 font-semibold flex flex-col items-center justify-center h-40 bg-white rounded-xl border border-slate-200 shadow-sm">
+            <div class="animate-spin rounded-full h-10 w-10 border-[3px] border-blue-600 border-t-transparent mb-4"></div>
+            <span class="text-sm text-blue-700">جاري الاتصال...</span>
+            <span class="text-xs text-slate-400 mt-1" id="db-loading-name"></span>
+        </div>
+    </div>
+
+    <div id="invoice-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 transition-opacity duration-200 backdrop-blur-sm select-none">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-5 transform scale-100 transition-all duration-200 border border-slate-100">
+            <h2 id="modal-title" class="text-lg font-bold mb-5 text-slate-800 flex items-center pb-3 border-b border-slate-100">
+                إضافة فاتورة/دفعة
+            </h2>
+            <form id="invoice-form" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="doc-id">
+
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">الزبون <span class="text-red-500">*</span></label>
+                        <input type="text" id="customer" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">التاريخ <span class="text-red-500">*</span></label>
+                        <input type="date" id="date" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white font-mono">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" id="invoiceNumLabel">رقم الوثيقة <span class="text-red-500">*</span></label>
+                        <input type="text" id="invoiceNum" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white font-mono">
+                    </div>
+                    <div id="paymentMethodContainer">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">طريقة الدفع <span class="text-red-500">*</span></label>
+                        <select id="paymentMethod" required class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white">
+                            <option value="نقداً">نقداً 💵</option>
+                            <option value="شيك">شيك 🧾</option>
+                            <option value="تحويل بنكي">تحويل 🏦</option>
+                            <option value="بطاقة">بطاقة 💳</option>
+                            <option value="فاتورة">أجل 📄</option>
+                        </select>
+                    </div>
+                    <div id="checkReadOnlyField" class="hidden">
+                         <label class="block text-xs font-bold text-slate-700 mb-1">طريقة الدفع</label>
+                         <div class="w-full p-2 border border-green-200 rounded-lg bg-green-50 text-green-700 font-bold flex items-center text-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>شيك (مُغطى)
+                         </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">المبلغ (د.ج) <span class="text-red-500">*</span></label>
+                        <input type="number" id="amount" step="0.01" min="0" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-left font-mono font-bold text-sm bg-slate-50 focus:bg-white" value="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">المدفوع (د.ج) <span class="text-red-500">*</span></label>
+                        <input type="number" id="paidAmount" step="0.01" min="0" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-left font-mono font-bold text-sm bg-slate-50 focus:bg-white" value="0.00">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-2 space-x-reverse pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition text-xs active:scale-[0.98]">إلغاء</button>
+                    <button type="submit" id="modal-submit-button" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center justify-center shadow-sm active:scale-[0.98] text-xs">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2 w-11/12 max-w-sm"></div>
+
+    <script>
+        // =================================================================
+        // ✅ إعدادات Firebase ✅
+        // =================================================================
+        const firebaseConfig = {
+          apiKey: "AIzaSyDz6M1lmnQOUJ8enO5JGe4r6eq6FwQdlW0",
+          authDomain: "al-creance.firebaseapp.com",
+          projectId: "al-creance",
+          storageBucket: "al-creance.firebasestorage.app",
+          messagingSenderId: "511162605280",
+          appId: "1:511162605280:web:74a69b40c724e7ca7f7a85",
+          measurementId: "G-TVR3HD1C03"
+        };
+
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            if (firebase.analytics) { firebase.analytics(); }
+        } catch (error) { console.error("Firebase error:", error); showToast("فشل الاتصال بقاعدة البيانات.", "error"); }
+
+        const DB_PREFIX = 'invoices_db';
+        const TOTAL_DBS = 10;
+        let currentDbIndex = localStorage.getItem('selectedDbIndex') || '01';
+        function getCurrentCollectionName() { return `${DB_PREFIX}${currentDbIndex}`; }
+
+        function initDbSelector() {
+            const selector = document.getElementById('db-selector');
+            for (let i = 1; i <= TOTAL_DBS; i++) {
+                const index = i.toString().padStart(2, '0');
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `قاعدة ${i}`;
+                selector.appendChild(option);
+            }
+            selector.value = currentDbIndex;
+            updateDbLoadingName();
+        }
+
+        async function changeDatabase(newIndex) {
+            if (newIndex === currentDbIndex) return;
+            currentDbIndex = newIndex;
+            localStorage.setItem('selectedDbIndex', newIndex);
+            updateDbLoadingName();
+            invoices = []; renderTable(); updateDebtDropdownUI();
+            document.getElementById('loading-message').classList.remove('hidden');
+            toggleActionButtons(false);
+            await loadInvoices();
+            showToast(`تم الانتقال لقاعدة ${parseInt(newIndex)}.`, 'success');
+        }
+        function updateDbLoadingName() { document.getElementById('db-loading-name').textContent = `(DB: ${parseInt(currentDbIndex)})`; }
+        function toggleActionButtons(enable) {
+            document.getElementById('add-invoice-button').disabled = !enable;
+            document.getElementById('add-check-button').disabled = !enable;
+        }
+
+        let invoices = [];
+        let currentSortColumn = 'date';
+        let currentSortDirection = 'desc';
+
+        async function loadInvoices() {
+            if (!db) return;
+            const collectionName = getCurrentCollectionName();
+            if (invoices.length > 0) toggleTableLoading(true);
+            try {
+                const querySnapshot = await db.collection(collectionName).orderBy('date', 'desc').get();
+                invoices = [];
+                querySnapshot.forEach((doc) => {
+                    let data = doc.data();
+                    invoices.push({ id: doc.id, ...data, amount: parseFloat(data.amount || 0), paidAmount: parseFloat(data.paidAmount || 0), remaining: parseFloat(data.amount || 0) - parseFloat(data.paidAmount || 0) });
+                });
+                document.getElementById('loading-message').classList.add('hidden');
+                toggleActionButtons(true);
+                populateCustomerFilter(); renderTable(); updateDebtDropdownUI();
+            } catch (error) { console.error("Error:", error); showToast("خطأ في التحميل. تحقق من الصلاحيات.", "error"); } finally { toggleTableLoading(false); }
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('modal-submit-button');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true; submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+
+            const docId = document.getElementById('doc-id').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const paidAmount = parseFloat(document.getElementById('paidAmount').value);
+            const paymentMethodSelect = document.getElementById('paymentMethod');
+            const dataToSave = { customer: document.getElementById('customer').value, date: document.getElementById('date').value, invoiceNum: document.getElementById('invoiceNum').value, amount: amount.toFixed(2), paymentMethod: paymentMethodSelect.value, paidAmount: paidAmount.toFixed(2) };
+
+            if (dataToSave.paymentMethod !== 'شيك' && paidAmount > amount) { showToast("تنبيه: المدفوع أكبر من الإجمالي!", 'error'); submitBtn.disabled = false; submitBtn.innerHTML = originalBtnText; return; }
+            const collectionName = getCurrentCollectionName();
+            try {
+                if (docId) { await db.collection(collectionName).doc(docId).update(dataToSave); showToast("تم التحديث 👍", 'success'); } else { await db.collection(collectionName).add(dataToSave); showToast(dataToSave.paymentMethod === 'شيك' ? "تمت إضافة الشيك 🧾" : "تمت الإضافة ✅", 'success'); }
+                closeModal(); await loadInvoices();
+            } catch (error) { console.error("Error saving:", error); showToast("فشل الحفظ.", 'error'); } finally { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnText; }
+        }
+
+        async function deleteInvoice(id) {
+            if (!confirm('⚠ هل أنت متأكد؟ لا يمكن التراجع.')) return;
+            toggleTableLoading(true); const collectionName = getCurrentCollectionName();
+            try { await db.collection(collectionName).doc(id).delete(); showToast("تم الحذف 🗑️", 'success'); await loadInvoices(); } catch (error) { console.error("Error deleting:", error); showToast("فشل الحذف.", 'error'); toggleTableLoading(false); }
+        }
+
+        function toggleDebtDropdown() { document.getElementById('debt-dropdown-menu').classList.toggle('hidden'); }
+        document.addEventListener('click', function(event) { const container = document.getElementById('debt-dropdown-container'); if (!container.contains(event.target)) { document.getElementById('debt-dropdown-menu').classList.add('hidden'); } });
+
+        function updateDebtDropdownUI() {
+            const debtListItems = document.getElementById('debt-list-items'); const noDebtMessage = document.getElementById('no-debt-message'); const badge = document.getElementById('debt-count-badge');
+            debtListItems.innerHTML = '';
+            const customerDebts = {};
+            invoices.forEach(inv => { const customerName = inv.customer || 'غير محدد'; if (!customerDebts[customerName]) customerDebts[customerName] = 0; if (inv.paymentMethod === 'شيك') { customerDebts[customerName] -= inv.amount; } else { customerDebts[customerName] += inv.remaining; } });
+            const indebtedCustomers = Object.entries(customerDebts).filter(([_, debt]) => debt > 1.00).sort(([_, debtA], [__, debtB]) => debtB - debtA);
+            if (indebtedCustomers.length > 0) {
+                badge.textContent = indebtedCustomers.length; badge.classList.remove('hidden'); noDebtMessage.classList.add('hidden');
+                indebtedCustomers.forEach(([customer, debt]) => { const li = document.createElement('li'); li.className = 'px-3 py-2 flex justify-between items-center hover:bg-slate-50 transition text-xs'; li.innerHTML = `<span class="font-bold text-slate-700 truncate mr-2" title="${customer}">${customer}</span><span class="font-mono font-bold text-red-600 whitespace-nowrap">${debt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="text-[10px]">د.ج</span></span>`; debtListItems.appendChild(li); });
+            } else { badge.classList.add('hidden'); noDebtMessage.classList.remove('hidden'); }
+        }
+
+        function populateCustomerFilter() {
+            const customerSelect = document.getElementById('customer-filter'); const currentSelection = customerSelect.value; customerSelect.innerHTML = '<option value="">الكل</option>';
+            const customers = [...new Set(invoices.map(inv => inv.customer).filter(Boolean))].sort();
+            customers.forEach(customer => { const option = document.createElement('option'); option.value = customer; option.textContent = customer; customerSelect.appendChild(option); });
+             customerSelect.value = currentSelection;
+        }
+
+        window.sortData = function(column) {
+            if (currentSortColumn === column) { currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc'; } else { currentSortColumn = column; currentSortDirection = 'asc'; }
+            invoices.sort((a, b) => { let aVal = a[column]; let bVal = b[column]; if (column === 'date') { aVal = new Date(aVal); bVal = new Date(bVal); } else if (typeof aVal === 'string') { aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase(); } if (aVal < bVal) return currentSortDirection === 'asc' ? -1 : 1; if (aVal > bVal) return currentSortDirection === 'asc' ? 1 : -1; return 0; });
+            renderTable();
+        }
+        window.filterInvoices = function() { renderTable(); }
+
+        // ⭐ دالة لتوسيع/طي الصفوف في الموبايل ⭐
+        window.toggleRow = function(rowElement) {
+            // التحقق من أننا على الموبايل
+            if (window.innerWidth <= 768) {
+                rowElement.classList.toggle('expanded');
+            }
+        }
+
+        function renderTable() {
+            const tableBody = document.getElementById('invoice-table-body'); const searchInput = document.getElementById('global-search').value.toLowerCase(); const customerFilter = document.getElementById('customer-filter').value; const dateFrom = document.getElementById('date-from').value; const dateTo = document.getElementById('date-to').value; const paymentFilter = document.getElementById('payment-filter').value; const statusFilter = document.getElementById('status-filter').value;
+            const filteredInvoices = invoices.filter(invoice => { const isCheck = invoice.paymentMethod === 'شيك'; const effectiveRemainingForFilter = isCheck ? 0 : invoice.remaining; const searchMatch = !searchInput || (invoice.customer || '').toLowerCase().includes(searchInput) || (invoice.invoiceNum || '').toLowerCase().includes(searchInput) || (invoice.paymentMethod || '').toLowerCase().includes(searchInput) || (invoice.amount.toFixed(2)).includes(searchInput); const customerMatch = !customerFilter || invoice.customer === customerFilter; let dateMatch = true; if (dateFrom) dateMatch = dateMatch && invoice.date >= dateFrom; if (dateTo) dateMatch = dateMatch && invoice.date <= dateTo; const paymentMatch = !paymentFilter || invoice.paymentMethod === paymentFilter; let statusMatch = true; if (statusFilter === 'paid') statusMatch = isCheck || effectiveRemainingForFilter <= 0.01; else if (statusFilter === 'unpaid') statusMatch = !isCheck && effectiveRemainingForFilter > 0.01 && invoice.paidAmount < 0.01; else if (statusFilter === 'partial') statusMatch = !isCheck && effectiveRemainingForFilter > 0.01 && invoice.paidAmount > 0.01; else if (statusFilter === 'check') statusMatch = isCheck; return searchMatch && paymentMatch && statusMatch && customerMatch && dateMatch; });
+            document.querySelectorAll('.sort-icon').forEach(span => span.textContent = ''); const icon = document.getElementById(`sort-${currentSortColumn}`); if (icon) icon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
+            let html = ''; let totalAmount = 0; let totalPaid = 0; let netDebtBalance = 0;
+            filteredInvoices.forEach((invoice) => {
+                const isCheck = invoice.paymentMethod === 'شيك'; totalAmount += invoice.amount; totalPaid += invoice.paidAmount; if (isCheck) netDebtBalance -= invoice.amount; else netDebtBalance += invoice.remaining;
+                const displayRemainingForRow = isCheck ? 0 : invoice.remaining; let remainingClass = ''; let statusBadge = ''; let paymentMethodDisplay = invoice.paymentMethod || '---'; let rowBgClass = 'bg-white hover:bg-slate-50';
+                if (isCheck) { paymentMethodDisplay = '<span class="flex items-center text-green-700 font-bold"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>شيك</span>'; remainingClass = 'text-green-700 font-bold'; statusBadge = '<span class="text-[9px] mr-1 p-0.5 px-1.5 rounded-full bg-green-50 text-green-700 border border-green-100">مُغطى</span>'; rowBgClass = 'bg-green-50/20 hover:bg-green-50/40'; } 
+                else { if (displayRemainingForRow > 0.01) { remainingClass = 'text-red-600 font-extrabold'; let statusText = invoice.paidAmount > 0.01 ? 'جزئي' : 'دين'; let statusBg = invoice.paidAmount > 0.01 ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-red-50 text-red-700 border-red-100'; statusBadge = `<span class="text-[9px] mr-1 p-0.5 px-1.5 rounded-full border ${statusBg}">${statusText}</span>`; if (invoice.paidAmount <= 0.01) rowBgClass = 'bg-red-50/20 hover:bg-red-50/40'; } else if (invoice.amount > 0.01) { remainingClass = 'text-green-600 font-bold'; statusBadge = '<span class="text-[9px] mr-1 p-0.5 px-1.5 rounded-full bg-green-100 text-green-700 border border-green-200">خالص</span>'; } else { remainingClass = 'text-slate-400 font-medium'; statusBadge = ''; } }
+                
+                // ⭐ بناء الصف مع إضافة كلاسات mobile-summary و mobile-detail وحدث النقر ⭐
+                html += `
+                    <tr class="${rowBgClass} transition duration-150 ease-in-out group" onclick="toggleRow(this)">
+                        <td class="excel-cell whitespace-nowrap font-bold text-slate-800 mobile-summary" data-label="الزبون">
+                            ${invoice.customer || '<span class="text-slate-400">غير محدد</span>'}
+                        </td>
+                        <td class="excel-cell whitespace-nowrap text-slate-600 font-medium font-mono text-xs mobile-detail" data-label="التاريخ">${invoice.date || '---'}</td>
+                        <td class="excel-cell whitespace-nowrap text-slate-700 font-mono text-xs mobile-summary" data-label="رقم الوثيقة">
+                            <span class="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">${invoice.invoiceNum || '---'}</span>
+                        </td>
+                        <td class="excel-cell whitespace-nowrap text-slate-800 text-left font-mono font-semibold mobile-summary" data-label="المبلغ">
+                            ${invoice.amount.toFixed(2)}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 mr-2 md:hidden expand-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </td>
+                        <td class="excel-cell whitespace-nowrap text-xs mobile-detail" data-label="الطريقة">${paymentMethodDisplay}</td>
+                        <td class="excel-cell whitespace-nowrap text-slate-800 text-left font-mono text-xs mobile-detail" data-label="المدفوع">${invoice.paidAmount.toFixed(2)}</td>
+                        <td class="excel-cell whitespace-nowrap ${remainingClass} text-left font-mono text-sm mobile-detail" data-label="المتبقي (دين)">${displayRemainingForRow.toFixed(2)} ${statusBadge}</td>
+                        <td class="excel-cell whitespace-nowrap text-right font-medium md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mobile-detail" data-label="الإجراء"><div class="flex items-center justify-end space-x-1 space-x-reverse"><button onclick="event.stopPropagation(); openModal('${invoice.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button onclick="event.stopPropagation(); deleteInvoice('${invoice.id}')" class="text-red-500 hover:bg-red-50 p-1.5 rounded transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></div></td>
+                    </tr>`;
+            });
+            if (filteredInvoices.length === 0) html = `<tr><td colspan="8" class="text-center p-8 text-slate-400 text-sm">لا توجد سجلات.</td></tr>`;
+            tableBody.innerHTML = html;
+            // تحديث الإجماليات
+            const totalAmountStr = totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalPaidStr = totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const totalRemainingStr = Math.max(0, netDebtBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            document.getElementById('total-amount').textContent = totalAmountStr + ' د.ج';
+            document.getElementById('total-amount-mobile').textContent = totalAmountStr;
+            document.getElementById('total-paid').textContent = totalPaidStr + ' د.ج';
+            document.getElementById('total-paid-mobile').textContent = totalPaidStr;
+            document.getElementById('total-remaining').textContent = totalRemainingStr + ' د.ج (صافي الديون)';
+            document.getElementById('total-remaining-mobile').textContent = totalRemainingStr + ' د.ج';
+        }
+
+        window.openCheckModal = function() {
+            openModal(null);
+            document.getElementById('modal-title').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> إضافة شيك 🧾';
+            document.getElementById('invoiceNumLabel').innerHTML = 'رقم الشيك <span class="text-red-500">*</span>';
+            const submitBtn = document.getElementById('modal-submit-button'); submitBtn.textContent = 'حفظ الشيك'; submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            document.getElementById('paymentMethod').value = 'شيك'; document.getElementById('paymentMethodContainer').classList.add('hidden-force'); document.getElementById('checkReadOnlyField').classList.remove('hidden');
+        }
+        window.openModal = function(id = null) {
+            const modal = document.getElementById('invoice-modal'); const form = document.getElementById('invoice-form'); const paymentSelect = document.getElementById('paymentMethod'); const paymentContainer = document.getElementById('paymentMethodContainer'); const checkReadOnly = document.getElementById('checkReadOnlyField'); const submitBtn = document.getElementById('modal-submit-button');
+            form.reset(); document.getElementById('doc-id').value = id || ''; paymentContainer.classList.remove('hidden-force'); checkReadOnly.classList.add('hidden'); paymentSelect.disabled = false; document.getElementById('invoiceNumLabel').innerHTML = 'رقم الوثيقة <span class="text-red-500">*</span>'; submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700'); submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            if (!id) { document.getElementById('date').value = new Date().toISOString().split('T')[0]; document.getElementById('modal-title').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> إضافة فاتورة/دفعة'; submitBtn.textContent = 'حفظ'; document.getElementById('amount').value = '0.00'; document.getElementById('paidAmount').value = '0.00'; paymentSelect.value = 'نقداً'; } 
+            else { const invoice = invoices.find(inv => inv.id === id); if (invoice) { document.getElementById('customer').value = invoice.customer || ''; document.getElementById('date').value = invoice.date || ''; document.getElementById('invoiceNum').value = invoice.invoiceNum || ''; document.getElementById('amount').value = invoice.amount.toFixed(2); paymentSelect.value = invoice.paymentMethod || 'نقداً'; document.getElementById('paidAmount').value = invoice.paidAmount.toFixed(2); document.getElementById('modal-title').textContent = 'تعديل (' + invoice.invoiceNum + ')'; submitBtn.textContent = 'تحديث'; if (invoice.paymentMethod === 'شيك') { document.getElementById('invoiceNumLabel').innerHTML = 'رقم الشيك <span class="text-red-500">*</span>'; paymentContainer.classList.add('hidden-force'); checkReadOnly.classList.remove('hidden'); submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); submitBtn.classList.add('bg-green-600', 'hover:bg-green-700'); } } }
+            modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('flex'), 10);
+        }
+        window.closeModal = function() { const modal = document.getElementById('invoice-modal'); modal.classList.remove('flex'); setTimeout(() => modal.classList.add('hidden'), 200); }
+        function toggleTableLoading(isLoading) { document.getElementById('table-loading-overlay').classList.toggle('hidden', !isLoading); }
+
+        // دالة لإظهار/إخفاء الفلاتر على الموبايل
+        function toggleFilters() {
+            const container = document.getElementById('filters-container');
+            const icon = document.getElementById('filter-toggle-icon');
+            const text = document.getElementById('filter-toggle-text');
+            container.classList.toggle('hidden');
+            if (container.classList.contains('hidden')) {
+                icon.classList.remove('rotate-180'); text.textContent = "إظهار الفلاتر";
+            } else {
+                icon.classList.add('rotate-180'); text.textContent = "إخفاء الفلاتر";
+            }
+        }
+
+        // نظام التنبيهات (Toast)
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            let bgColor = 'bg-slate-800', icon = 'ℹ️';
+            if (type === 'error') { bgColor = 'bg-red-600'; icon = '❌'; } else if (type === 'success') { bgColor = 'bg-green-600'; icon = '✅'; }
+            toast.className = `${bgColor} text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center space-x-2 space-x-reverse text-xs font-bold fade-in backdrop-blur-md bg-opacity-90`;
+            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('opacity-0', 'transition-opacity', 'duration-300'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        if (db) { initDbSelector(); loadInvoices(); }
+    </script>
+</body>
+</html>
