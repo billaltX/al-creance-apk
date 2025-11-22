@@ -1,136 +1,79 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <link rel="manifest" href="./manifest.json">
-
-    <meta name="theme-color" content="#ffffff">
-
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="AL CREANCE">
-    <link rel="apple-touch-icon" href="./icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام إدارة الديون - AL CREANCE</title>
+    <title data-i18n="appTitle">AL CREANCE Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Tajawal:wght@400;500;700&display=swap');
         body {
             font-family: 'Tajawal', 'Cairo', sans-serif;
-            background-color: #f1f5f9;
-            direction: rtl; 
-            color: #1e293b;
-            font-size: 14px;
+            background-color: #f1f5f9; color: #1e293b; font-size: 14px; transition: all 0.3s ease;
         }
+        /* تغيير الخط عند التحويل للغات اللاتينية */
+        html[dir="ltr"] body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; }
+
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
         .top-nav { background-color: #ffffff; border-bottom: 1px solid #e2e8f0; }
         
-        /* ========================================= */
-        /* ⭐ تحسينات الجدول للموبايل (نظام الطي) ⭐ */
-        /* ========================================= */
+        /* Responsive Table Styles */
         @media (max-width: 768px) {
-            .excel-table thead { display: none; } /* إخفاء رأس الجدول */
+            .excel-table thead { display: none; }
             .excel-table, .excel-table tbody, .excel-table tr, .excel-table td { display: block; width: 100%; }
+            .excel-table tr { margin-bottom: 0.75rem; background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); overflow: hidden; cursor: pointer; transition: all 0.3s ease; }
+            /* استخدام text-start لمحاذاة النص حسب الاتجاه */
+            .excel-table td { text-align: start; padding: 0.75rem 1rem; position: relative; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
             
-            /* تنسيق البطاقة (السطر) */
-            .excel-table tr {
-                margin-bottom: 0.75rem;
-                background: white;
-                border: 1px solid #e2e8f0;
-                border-radius: 0.75rem;
-                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-                overflow: hidden; /* لضمان احتواء العناصر الداخلية */
-                cursor: pointer; /* مؤشر اليد */
-                transition: all 0.3s ease;
-            }
-
-            /* تنسيق الخلايا */
-            .excel-table td {
-                text-align: left;
-                padding: 0.75rem 1rem;
-                position: relative;
-                border-bottom: 1px solid #f1f5f9;
-                display: flex; /* افتراضياً تظهر كـ flex */
-                justify-content: space-between;
-                align-items: center;
-                font-size: 0.95rem;
-            }
-
-            /* إضافة العناوين قبل القيم */
-            .excel-table td::before {
-                content: attr(data-label);
-                font-weight: 700; color: #64748b; font-size: 0.8rem; margin-left: auto; order: -1;
-            }
-
-            /* --- منطق الإخفاء والإظهار --- */
+            /* محاذاة تسميات الخلايا حسب الاتجاه باستخدام الخواص المنطقية */
+            .excel-table td .cell-label { font-weight: 700; color: #64748b; font-size: 0.8rem; margin-inline-end: auto; order: -1; }
             
-            /* 1. إخفاء التفاصيل افتراضياً */
-            .excel-table td.mobile-detail {
-                display: none; /* مخفي */
-                background-color: #f8fafc; /* لون خلفية مختلف قليلاً للتفاصيل */
-                font-size: 0.9rem;
-                padding: 0.5rem 1rem;
-                border-bottom-color: #e2e8f0;
-            }
-
-            /* 2. تنسيق الملخص (الظاهر دائماً) */
-            .excel-table td.mobile-summary {
-                border-bottom: none; /* إزالة الحدود بين عناصر الملخص */
-                padding-top: 0.5rem;
-                padding-bottom: 0.5rem;
-            }
-            /* تمييز المبلغ في الملخص */
-            .excel-table td.mobile-summary[data-label="المبلغ"] {
-                 font-weight: 800; color: #0f172a; font-family: 'ui-monospace', monospace;
-            }
-
-            /* 3. عند توسيع السطر (إضافة كلاس expanded) */
-            .excel-table tr.expanded {
-                border-color: #3b82f6; /* تغيير لون حدود البطاقة عند الفتح */
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            }
-            /* إظهار التفاصيل */
-            .excel-table tr.expanded td.mobile-detail {
-                display: flex; /* يصبح ظاهراً */
-                animation: slideDown 0.3s ease-out;
-            }
-             /* إضافة فاصل قبل أول عنصر تفاصيل */
-            .excel-table tr.expanded td.mobile-detail:first-of-type {
-                border-top: 2px solid #f1f5f9;
-                margin-top: 0.5rem;
-            }
-
-            /* تدوير أيقونة السهم */
+            .excel-table td.mobile-detail { display: none; background-color: #f8fafc; font-size: 0.9rem; padding: 0.5rem 1rem; border-bottom-color: #e2e8f0; }
+            .excel-table td.mobile-summary { border-bottom: none; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+            /* الأرقام تبقى دائماً من اليسار لليمين */
+            .excel-table td[data-type="amount"], .excel-table td[data-type="number"] { direction: ltr; text-align: left; font-family: 'ui-monospace', monospace; }
+            .excel-table td.mobile-summary[data-type="amount"] { font-weight: 800; color: #0f172a; }
+            
+            .excel-table tr.expanded { border-color: #3b82f6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+            .excel-table tr.expanded td.mobile-detail { display: flex; animation: slideDown 0.3s ease-out; }
+            .excel-table tr.expanded td.mobile-detail:first-of-type { border-top: 2px solid #f1f5f9; margin-top: 0.5rem; }
             .expand-icon { transition: transform 0.3s ease; }
             .excel-table tr.expanded .expand-icon { transform: rotate(180deg); }
-            
-            /* إخفاء تسمية عمود الإجراءات */
-            .excel-table td:last-child::before { display: none; }
-             .excel-table td:last-child { justify-content: center; padding-top: 1rem; padding-bottom: 1rem; background-color: #f8fafc;}
-
-             /* تذييل الجدول على الموبايل */
-             .excel-table tfoot { display: block; margin-top: 1rem;}
-             .excel-table tfoot tr { display: flex; flex-direction: column; border: none; border-top: 3px solid #3b82f6; background: #f8fafc; border-radius: 0.75rem; overflow: hidden;}
-             .excel-table tfoot td { display: flex; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+            .excel-table td:last-child .cell-label { display: none; }
+            .excel-table td:last-child { justify-content: center; padding-top: 1rem; padding-bottom: 1rem; background-color: #f8fafc;}
+            .excel-table tfoot { display: block; margin-top: 1rem;}
+            .excel-table tfoot tr { display: flex; flex-direction: column; border: none; border-top: 3px solid #3b82f6; background: #f8fafc; border-radius: 0.75rem; overflow: hidden;}
+            .excel-table tfoot td { display: flex; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
         }
-
-        /* تنسيقات سطح المكتب */
         @media (min-width: 769px) {
-            .excel-table th { cursor: pointer; user-select: none; transition: background 0.2s; font-weight: 700; letter-spacing: 0.025em; padding: 12px; font-size: 0.85rem;}
+            /* استخدام text-start في العناوين لمحاذاتها تلقائياً */
+            .excel-table th { cursor: pointer; user-select: none; transition: background 0.2s; font-weight: 700; letter-spacing: 0.025em; padding: 12px; font-size: 0.85rem; text-align: start; }
             .excel-table th:hover { background-color: #f1f5f9; }
-            .excel-cell { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
-            /* إخفاء أيقونة التوسيع على الديسكتوب */
-            .expand-icon-container { display: none; }
+            .excel-cell { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; text-align: start; }
+            /* الأرقام على الديسكتوب تبقى يسار */
+            .excel-cell[data-type="amount"], .excel-cell[data-type="number"] { direction: ltr; text-align: left; }
+            .expand-icon-container, .cell-label { display: none; }
         }
-
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        /* إجبار حقول الإدخال الرقمية والتواريخ على LTR */
         input[type="date"], input[type="number"], .font-mono { font-family: 'ui-monospace', monospace; text-align: left; direction: ltr; }
         .hidden-force { display: none !important; }
-        select.custom-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: left 0.5rem center; background-repeat: no-repeat; background-size: 1.2em 1.2em; padding-left: 2rem; -webkit-appearance: none; appearance: none; }
+        
+        /* تعديل مكان أيقونة القائمة المنسدلة حسب الاتجاه */
+        select.custom-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-repeat: no-repeat; background-size: 1.2em 1.2em; -webkit-appearance: none; appearance: none; }
+        html[dir="rtl"] select.custom-select { background-position: left 0.5rem center; padding-left: 2rem; padding-right: 0.75rem; }
+        html[dir="ltr"] select.custom-select { background-position: right 0.5rem center; padding-right: 2rem; padding-left: 0.75rem; }
+
         .fade-in { animation: fadeIn 0.2s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         #debt-dropdown-menu { max-height: 350px; overflow-y: auto; }
+        /* PDF Modal Styles */
+        #pdf-content { background: white; }
+        /* إخفاء العناصر عند الطباعة */
+        @media print { .no-print { display: none !important; } }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -142,44 +85,55 @@
     <nav class="top-nav p-2 sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm">
         <div class="container mx-auto flex flex-row justify-between items-center md:px-4">
             <div class="text-lg font-bold text-slate-800 flex items-center">
-                <span class="text-2xl ml-1.5 filter drop-shadow-sm">📊</span>
+                <span class="text-2xl margin-inline-end-1.5 filter drop-shadow-sm">📊</span>
                 <div class="flex flex-col -space-y-0.5">
                     <span class="leading-tight tracking-tight text-blue-700">AL CREANCE</span>
-                    <span class="text-[9px] text-slate-500 font-semibold opacity-80">Multi-DB System</span>
+                    <span class="text-[9px] text-slate-500 font-semibold opacity-80" data-i18n="multiDbSystem">Multi-DB System</span>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-2 space-x-reverse flex-1 justify-end md:justify-center max-w-md ml-auto">
+            <div class="flex items-center space-x-2 space-x-reverse flex-1 justify-end md:justify-center max-w-xl margin-inline-start-auto">
                 
-                <div class="relative group bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 flex items-center">
-                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
-                    <select id="db-selector" onchange="changeDatabase(this.value)" class="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 p-0 pr-6 cursor-pointer outline-none w-full" style="-webkit-appearance: none; appearance: none;">
-                        </select>
-                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1 text-slate-400"><svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></div>
+                 <div class="relative group bg-slate-50 border border-slate-200 rounded-lg px-1 py-1 flex items-center margin-inline-end-2">
+                    <select id="lang-selector" onchange="changeLanguage(this.value)" class="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 p-1 cursor-pointer outline-none">
+                        <option value="ar">🇺 🇦🇪 العربية</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="en">🇬🇧 English</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+                    <div class="relative group px-2 py-1 flex items-center border-r border-slate-200 rtl:border-r-0 rtl:border-l">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 rtl:ml-1 ltr:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                        <select id="db-selector" onchange="changeDatabase(this.value)" class="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 p-0 rtl:pl-4 ltr:pr-4 cursor-pointer outline-none w-full max-w-[80px] md:max-w-[120px] truncate" style="-webkit-appearance: none; appearance: none;">
+                            </select>
+                    </div>
+                    <button onclick="openDbRenameModal()" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" data-i18n-title="dbSettingsTitle" title="إعدادات قواعد البيانات">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    </button>
                 </div>
 
                 <div class="relative" id="debt-dropdown-container">
                     <button onclick="toggleDebtDropdown()" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-100 transition font-bold text-xs flex items-center border border-red-100 relative whitespace-nowrap">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span class="hidden sm:inline">المتعثرين</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:ml-1 ltr:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <span class="hidden sm:inline" data-i18n="debtorsBtn">المتعثرين</span>
                         <span id="debt-count-badge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border border-white">0</span>
                     </button>
 
-                    <div id="debt-dropdown-menu" class="hidden absolute left-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-slate-100 z-50 fade-in origin-top-left">
+                    <div id="debt-dropdown-menu" class="hidden absolute rtl:left-0 ltr:right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-slate-100 z-50 fade-in rtl:origin-top-left ltr:origin-top-right">
                         <div class="p-3 border-b border-slate-100 bg-slate-50 rounded-t-lg flex justify-between items-center">
-                             <h3 class="font-bold text-slate-700 text-sm">صافي الديون</h3>
-                             <span class="text-[10px] text-slate-500">(الأعلى أولاً)</span>
+                             <h3 class="font-bold text-slate-700 text-sm" data-i18n="netDebtSummary">صافي الديون</h3>
+                        </div>
+                         <div class="p-2 bg-blue-50 border-b border-blue-100">
+                            <button onclick="openFullDashboard()" class="w-full flex items-center justify-center px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-700 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:ml-2 ltr:mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                <span data-i18n="viewFullDashPdf">عرض الداشبورد الكامل وتصدير PDF</span>
+                            </button>
                         </div>
                         <ul id="debt-list-items" class="py-1 divide-y divide-slate-50 max-h-64 overflow-y-auto"></ul>
-                        <div id="no-debt-message" class="hidden p-4 text-center text-slate-500 text-xs font-medium">✅ لا توجد ديون متعثرة.</div>
+                        <div id="no-debt-message" class="hidden p-4 text-center text-slate-500 text-xs font-medium" data-i18n="noDebts">✅ لا توجد ديون متعثرة.</div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="hidden md:flex items-center">
-                <button class="text-slate-500 hover:text-slate-700 p-2 hover:bg-slate-100 rounded-full transition" title="تسجيل الخروج">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                </button>
             </div>
         </div>
     </nav>
@@ -191,49 +145,49 @@
             
             <div class="flex justify-between items-center mb-4 md:mb-0">
                 <h2 class="text-base font-bold text-slate-700 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
-                    تصفية وبحث
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:ml-1.5 ltr:mr-1.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+                    <span data-i18n="filterSearch">تصفية وبحث</span>
                 </h2>
                 <button onclick="toggleFilters()" class="md:hidden text-slate-500 hover:text-blue-600 focus:outline-none text-xs font-bold bg-slate-100 px-3 py-1.5 rounded-lg flex items-center">
-                    <span id="filter-toggle-text">إظهار الفلاتر</span>
-                    <svg id="filter-toggle-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                    <span id="filter-toggle-text" data-i18n="showFilters">إظهار الفلاتر</span>
+                    <svg id="filter-toggle-icon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:mr-1 ltr:ml-1 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
             </div>
             
             <div id="filters-container" class="hidden md:block mt-4 md:mt-0">
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
                     <div class="col-span-2 md:col-span-1">
-                        <label class="block text-[10px] font-bold text-slate-500 mb-1">الزبون</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" data-i18n="customer">الزبون</label>
                         <select id="customer-filter" onchange="filterInvoices()" class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs bg-white font-semibold text-slate-700">
-                            <option value="">الكل</option>
+                            <option value="" data-i18n="all">الكل</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 mb-1">من</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" data-i18n="dateFrom">من</label>
                         <input type="date" id="date-from" oninput="filterInvoices()" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs font-mono">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 mb-1">إلى</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" data-i18n="dateTo">إلى</label>
                         <input type="date" id="date-to" oninput="filterInvoices()" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs font-mono">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-slate-500 mb-1">الطريقة</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" data-i18n="method">الطريقة</label>
                             <select id="payment-filter" onchange="filterInvoices()" class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs bg-white font-semibold text-slate-700">
-                                <option value="">الكل</option>
-                                <option value="نقداً">نقداً</option>
-                                <option value="شيك">شيك</option>
-                                <option value="تحويل بنكي">تحويل</option>
-                                <option value="بطاقة">بطاقة</option>
+                                <option value="" data-i18n="all">الكل</option>
+                                <option value="نقداً" data-i18n="cash">نقداً</option>
+                                <option value="شيك" data-i18n="check">شيك</option>
+                                <option value="تحويل بنكي" data-i18n="bankTransfer">تحويل بنكي</option>
+                                <option value="بطاقة" data-i18n="card">بطاقة</option>
                             </select>
                     </div>
                      <div>
-                        <label class="block text-[10px] font-bold text-slate-500 mb-1">الحالة</label>
+                        <label class="block text-[10px] font-bold text-slate-500 mb-1" data-i18n="status">الحالة</label>
                             <select id="status-filter" onchange="filterInvoices()" class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs bg-white font-semibold text-slate-700">
-                                <option value="">الكل</option>
-                                <option value="paid">مسددة</option>
-                                <option value="partial">جزئي</option>
-                                <option value="unpaid">ديون</option>
-                                 <option value="check">شيكات</option>
+                                <option value="" data-i18n="all">الكل</option>
+                                <option value="paid" data-i18n="paid">مسددة</option>
+                                <option value="partial" data-i18n="partial">جزئي</option>
+                                <option value="unpaid" data-i18n="debt">ديون</option>
+                                 <option value="check" data-i18n="checks">شيكات</option>
                             </select>
                     </div>
                 </div>
@@ -241,18 +195,18 @@
             
             <div class="flex flex-col md:flex-row justify-between items-center pt-4 md:border-t md:border-slate-100 space-y-3 md:space-y-0 md:space-x-3 md:space-x-reverse">
                 <div class="w-full md:w-2/5 relative group">
-                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <div class="absolute inset-y-0 rtl:left-0 ltr:right-0 rtl:pl-3 ltr:pr-3 flex items-center pointer-events-none">
                         <svg class="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                       </div>
-                    <input type="text" id="global-search" oninput="filterInvoices()" placeholder="بحث سريع..." class="w-full p-2 pr-9 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs shadow-sm transition">
+                    <input type="text" id="global-search" oninput="filterInvoices()" data-placeholder="quickSearch" placeholder="بحث سريع..." class="w-full p-2 rtl:pl-9 ltr:pr-9 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-xs shadow-sm transition">
                 </div>
 
                 <div class="flex w-full md:w-auto space-x-2 space-x-reverse">
                     <button onclick="openModal()" class="flex-1 md:flex-none px-4 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-sm hover:bg-blue-700 transition duration-200 flex items-center justify-center text-xs disabled:opacity-70 active:scale-[0.98]" id="add-invoice-button" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg> إضافة فاتورة
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:ml-1.5 ltr:mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg> <span data-i18n="addInvoice">إضافة فاتورة</span>
                     </button>
                     <button onclick="openCheckModal()" class="flex-1 md:flex-none px-4 py-2 bg-green-600 text-white font-bold rounded-lg shadow-sm hover:bg-green-700 transition duration-200 flex items-center justify-center text-xs disabled:opacity-70 active:scale-[0.98]" id="add-check-button" disabled>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> إضافة شيك
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:ml-1.5 ltr:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> <span data-i18n="addCheck">إضافة شيك</span>
                     </button>
                 </div>
             </div>
@@ -268,29 +222,28 @@
                 <table class="min-w-full divide-y divide-slate-200 excel-table">
                     <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600">
                         <tr>
-                            <th onclick="sortData('customer')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">الزبون <span id="sort-customer" class="sort-icon"></span></th>
-                            <th onclick="sortData('date')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">التاريخ <span id="sort-date" class="sort-icon"></span></th>
-                            <th onclick="sortData('invoiceNum')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">رقم الوثيقة <span id="sort-invoiceNum" class="sort-icon"></span></th>
-                            <th onclick="sortData('amount')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">المبلغ <span id="sort-amount" class="sort-icon"></span></th>
-                            <th onclick="sortData('paymentMethod')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">الطريقة <span id="sort-paymentMethod" class="sort-icon"></span></th>
-                            <th onclick="sortData('paidAmount')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">المدفوع <span id="sort-paidAmount" class="sort-icon"></span></th>
-                            <th onclick="sortData('remaining')" class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">المتبقي (دين) <span id="sort-remaining" class="sort-icon"></span></th>
-                            <th class="px-4 py-3 text-right text-[11px] uppercase tracking-wider">الإجراء</th>
+                            <th onclick="sortData('customer')" class="px-4 py-3 text-start text-[11px] uppercase tracking-wider"><span data-i18n="customer">الزبون</span> <span id="sort-customer" class="sort-icon"></span></th>
+                            <th onclick="sortData('date')" class="px-4 py-3 text-start text-[11px] uppercase tracking-wider"><span data-i18n="date">التاريخ</span> <span id="sort-date" class="sort-icon"></span></th>
+                            <th onclick="sortData('invoiceNum')" class="px-4 py-3 text-start text-[11px] uppercase tracking-wider"><span data-i18n="docNum">رقم الوثيقة</span> <span id="sort-invoiceNum" class="sort-icon"></span></th>
+                            <th onclick="sortData('amount')" class="px-4 py-3 text-start text-[11px] uppercase tracking-wider"><span data-i18n="totalAmount">المبلغ</span> <span id="sort-amount" class="sort-icon"></span></th>
+                            <th onclick="sortData('paymentMethod')" class="px-4 py-3 text-start text-[11px] uppercase tracking-wider"><span data-i18n="method">الطريقة</span> <span id="sort-paymentMethod" class="sort-icon"></span></th>
+                            <th onclick="sortData('paidAmount')" class="px-4 py-3 text-start text-[11px] uppercase tracking-wider"><span data-i18n="paidAmount">المدفوع</span> <span id="sort-paidAmount" class="sort-icon"></span></th>
+                            <th onclick="sortData('remaining')" class="px-4 py-3 text-start text-[11px] uppercase tracking-wider"><span data-i18n="remainingDebt">المتبقي (دين)</span> <span id="sort-remaining" class="sort-icon"></span></th>
+                            <th class="px-4 py-3 text-start text-[11px] uppercase tracking-wider" data-i18n="actions">الإجراء</th>
                         </tr>
                     </thead>
-                    <tbody id="invoice-table-body" class="bg-white divide-y divide-slate-100">
-                        </tbody>
+                    <tbody id="invoice-table-body" class="bg-white divide-y divide-slate-100"></tbody>
                     <tfoot class="bg-slate-50 font-bold border-t-2 border-blue-500/50 text-xs">
                         <tr>
-                            <td colspan="3" class="p-3 text-right text-slate-700 md:table-cell hidden">الإجمالي:</td>
-                             <td class="p-3 flex justify-between md:hidden"><span class="text-slate-500">الإجمالي:</span> <span id="total-amount-mobile" class="font-mono">0.00</span></td>
-                            <td id="total-amount" class="p-3 text-right text-slate-900 font-mono md:table-cell hidden">0.00</td>
-                            <td class="p-3 text-right md:table-cell hidden"></td>
-                             <td class="p-3 flex justify-between md:hidden"><span class="text-slate-500">المدفوع:</span> <span id="total-paid-mobile" class="font-mono">0.00</span></td>
-                            <td id="total-paid" class="p-3 text-right text-slate-900 font-mono md:table-cell hidden">0.00</td>
-                             <td class="p-3 flex justify-between md:hidden bg-red-50"><span class="text-red-700">صافي الديون:</span> <span id="total-remaining-mobile" class="font-mono text-red-600 font-extrabold">0.00</span></td>
-                            <td id="total-remaining" class="p-3 text-right text-sm text-red-600 font-extrabold font-mono md:table-cell hidden">0.00</td>
-                            <td class="p-3 text-right md:table-cell hidden"></td>
+                            <td colspan="3" class="p-3 text-start text-slate-700 md:table-cell hidden" data-i18n="total">الإجمالي:</td>
+                             <td class="p-3 flex justify-between md:hidden mobile-summary"><span class="text-slate-500" data-i18n="total">الإجمالي:</span> <span id="total-amount-mobile" class="font-mono">0.00</span></td>
+                            <td id="total-amount" class="p-3 text-start text-slate-900 font-mono md:table-cell hidden" dir="ltr">0.00</td>
+                            <td class="p-3 md:table-cell hidden"></td>
+                             <td class="p-3 flex justify-between md:hidden mobile-summary"><span class="text-slate-500" data-i18n="paid">المدفوع:</span> <span id="total-paid-mobile" class="font-mono">0.00</span></td>
+                            <td id="total-paid" class="p-3 text-start text-slate-900 font-mono md:table-cell hidden" dir="ltr">0.00</td>
+                             <td class="p-3 flex justify-between md:hidden bg-red-50 mobile-summary"><span class="text-red-700" data-i18n="netDebt">صافي الديون:</span> <span id="total-remaining-mobile" class="font-mono text-red-600 font-extrabold">0.00</span></td>
+                            <td id="total-remaining" class="p-3 text-start text-sm text-red-600 font-extrabold font-mono md:table-cell hidden" dir="ltr">0.00</td>
+                            <td class="p-3 md:table-cell hidden"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -299,14 +252,14 @@
 
         <div id="loading-message" class="text-center p-8 mt-6 font-semibold flex flex-col items-center justify-center h-40 bg-white rounded-xl border border-slate-200 shadow-sm">
             <div class="animate-spin rounded-full h-10 w-10 border-[3px] border-blue-600 border-t-transparent mb-4"></div>
-            <span class="text-sm text-blue-700">جاري الاتصال...</span>
+            <span class="text-sm text-blue-700" data-i18n="connecting">جاري الاتصال...</span>
             <span class="text-xs text-slate-400 mt-1" id="db-loading-name"></span>
         </div>
     </div>
 
     <div id="invoice-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 transition-opacity duration-200 backdrop-blur-sm select-none">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-5 transform scale-100 transition-all duration-200 border border-slate-100">
-            <h2 id="modal-title" class="text-lg font-bold mb-5 text-slate-800 flex items-center pb-3 border-b border-slate-100">
+            <h2 id="modal-title" class="text-lg font-bold mb-5 text-slate-800 flex items-center pb-3 border-b border-slate-100" data-i18n="addInvoiceOrPayment">
                 إضافة فاتورة/دفعة
             </h2>
             <form id="invoice-form" onsubmit="handleFormSubmit(event)">
@@ -314,63 +267,187 @@
 
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">الزبون <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1"><span data-i18n="customer">الزبون</span> <span class="text-red-500">*</span></label>
                         <input type="text" id="customer" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">التاريخ <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1"><span data-i18n="date">التاريخ</span> <span class="text-red-500">*</span></label>
                         <input type="date" id="date" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white font-mono">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1" id="invoiceNumLabel">رقم الوثيقة <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1" id="invoiceNumLabel"><span data-i18n="docNum">رقم الوثيقة</span> <span class="text-red-500">*</span></label>
                         <input type="text" id="invoiceNum" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white font-mono">
                     </div>
                     <div id="paymentMethodContainer">
-                        <label class="block text-xs font-bold text-slate-700 mb-1">طريقة الدفع <span class="text-red-500">*</span></label>
-                        <select id="paymentMethod" required class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white">
-                            <option value="نقداً">نقداً 💵</option>
-                            <option value="شيك">شيك 🧾</option>
-                            <option value="تحويل بنكي">تحويل 🏦</option>
-                            <option value="بطاقة">بطاقة 💳</option>
-                            <option value="فاتورة">أجل 📄</option>
+                        <label class="block text-xs font-bold text-slate-700 mb-1"><span data-i18n="method">الطريقة</span> <span class="text-red-500">*</span></label>
+                        <select id="paymentMethod" onchange="handlePaymentMethodChange()" required class="custom-select w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white">
+                            <option value="نقداً" data-i18n="cashWithEmoji">نقداً 💵</option>
+                            <option value="شيك" data-i18n="checkWithEmoji">شيك 🧾</option>
+                            <option value="تحويل بنكي" data-i18n="transferWithEmoji">تحويل 🏦</option>
+                            <option value="بطاقة" data-i18n="cardWithEmoji">بطاقة 💳</option>
+                            <option value="فاتورة" data-i18n="invoiceWithEmoji">أجل 📄</option>
                         </select>
                     </div>
                     <div id="checkReadOnlyField" class="hidden">
-                         <label class="block text-xs font-bold text-slate-700 mb-1">طريقة الدفع</label>
+                         <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="method">الطريقة</label>
                          <div class="w-full p-2 border border-green-200 rounded-lg bg-green-50 text-green-700 font-bold flex items-center text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>شيك (مُغطى)
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:ml-1.5 ltr:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span data-i18n="checkCovered">شيك (مُغطى)</span>
                          </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="grid grid-cols-2 gap-3 mb-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">المبلغ (د.ج) <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1"><span data-i18n="amount">المبلغ</span> (<span data-i18n="currency">د.ج</span>) <span class="text-red-500">*</span></label>
                         <input type="number" id="amount" step="0.01" min="0" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-left font-mono font-bold text-sm bg-slate-50 focus:bg-white" value="0.00">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">المدفوع (د.ج) <span class="text-red-500">*</span></label>
+                    <div id="paidAmountContainer">
+                        <label class="block text-xs font-bold text-slate-700 mb-1"><span data-i18n="paidAmount">المدفوع</span> (<span data-i18n="currency">د.ج</span>) <span class="text-red-500">*</span></label>
                         <input type="number" id="paidAmount" step="0.01" min="0" required class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-left font-mono font-bold text-sm bg-slate-50 focus:bg-white" value="0.00">
                     </div>
                 </div>
+                
+                <div id="notesContainer" class="mb-6 hidden">
+                    <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="notes">ملاحظات (تفاصيل الشيك)</label>
+                    <textarea id="notes" rows="2" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm transition bg-slate-50 focus:bg-white" placeholder="..."></textarea>
+                </div>
 
                 <div class="flex justify-end space-x-2 space-x-reverse pt-4 border-t border-slate-100">
-                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition text-xs active:scale-[0.98]">إلغاء</button>
-                    <button type="submit" id="modal-submit-button" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center justify-center shadow-sm active:scale-[0.98] text-xs">حفظ</button>
+                    <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition text-xs active:scale-[0.98]" data-i18n="cancel">إلغاء</button>
+                    <button type="submit" id="modal-submit-button" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center justify-center shadow-sm active:scale-[0.98] text-xs" data-i18n="save">حفظ</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2 w-11/12 max-w-sm"></div>
+    <div id="db-rename-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center p-4 z-50 transition-opacity duration-200 backdrop-blur-sm select-none">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-5 border border-slate-100">
+            <h2 class="text-lg font-bold mb-4 text-slate-800 border-b pb-3 flex justify-between items-center">
+                <span data-i18n="renameDbs">تسمية قواعد البيانات</span>
+                <button onclick="closeDbRenameModal()" class="text-slate-400 hover:text-slate-600"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+            </h2>
+            <div id="db-names-inputs" class="space-y-3 max-h-[60vh] overflow-y-auto pr-1"></div>
+            <div class="flex justify-end pt-4 border-t mt-4">
+                <button onclick="saveDbNames()" class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-xs flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 rtl:ml-1 ltr:mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    <span data-i18n="saveChanges">حفظ التغييرات</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="full-dashboard-modal" class="fixed inset-0 bg-slate-900/80 hidden z-50 overflow-y-auto backdrop-blur-sm">
+        <div class="min-h-screen px-4 text-center flex items-center justify-center">
+            <div class="inline-block w-full max-w-4xl p-6 my-8 text-start align-middle transition-all transform bg-white shadow-2xl rounded-2xl">
+                <div class="flex justify-between items-center mb-6 border-b pb-4 no-print">
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 rtl:ml-2 ltr:mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                        <span data-i18n="fullDebtDashboard">لوحة قيادة الديون الكاملة</span>
+                    </h2>
+                    <div class="flex space-x-2 space-x-reverse">
+                         <button onclick="exportDashboardToPDF()" class="px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rtl:ml-1 ltr:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            <span data-i18n="downloadPDF">تحميل PDF</span>
+                        </button>
+                        <button onclick="closeFullDashboard()" class="text-slate-400 hover:text-slate-600 p-2"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                    </div>
+                </div>
+                
+                <div id="pdf-content" class="p-8 bg-white">
+                    <div class="text-center mb-8">
+                        <h1 class="text-3xl font-bold text-blue-700 mb-2" data-i18n="appTitle">AL CREANCE</h1>
+                        <h2 class="text-xl font-semibold text-slate-600" data-i18n="debtReport">تقرير الديون المتعثرة</h2>
+                        <p class="text-sm text-slate-500 mt-2" id="pdf-date-db"></p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mb-8 text-center">
+                         <div class="p-4 bg-red-50 rounded-xl border border-red-100">
+                            <h3 class="text-sm font-bold text-red-800 mb-1" data-i18n="totalNetDebt">إجمالي صافي الديون</h3>
+                            <p class="text-2xl font-extrabold text-red-600 font-mono" id="pdf-total-debt" dir="ltr">0.00</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                            <h3 class="text-sm font-bold text-slate-700 mb-1" data-i18n="debtorsCount">عدد المتعثرين</h3>
+                             <p class="text-2xl font-extrabold text-slate-800 font-mono" id="pdf-debtors-count" dir="ltr">0</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-xl border border-green-100">
+                             <h3 class="text-sm font-bold text-green-800 mb-1" data-i18n="checksCollected">شيكات محصلة (مغطاة)</h3>
+                            <p class="text-2xl font-extrabold text-green-600 font-mono" id="pdf-total-checks" dir="ltr">0.00</p>
+                        </div>
+                    </div>
+
+                    <table class="min-w-full divide-y divide-slate-200 border border-slate-200">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 text-start text-xs font-bold text-slate-600 uppercase" data-i18n="customer">الزبون</th>
+                                <th class="px-4 py-3 text-start text-xs font-bold text-slate-600 uppercase"><span data-i18n="netDebt">صافي الدين</span> (<span data-i18n="currency">د.ج</span>)</th>
+                                <th class="px-4 py-3 text-start text-xs font-bold text-slate-600 uppercase" data-i18n="status">الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pdf-table-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                    <div id="pdf-no-data" class="hidden text-center p-6 text-slate-500" data-i18n="noDebts">لا توجد ديون متعثرة.</div>
+
+                    <div class="mt-12 pt-4 border-t text-center text-slate-400 text-xs" data-i18n="reportFooter">
+                        تم استخراج هذا التقرير من نظام AL CREANCE لإدارة الديون.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="toast-container" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2 w-11/12 max-w-sm no-print"></div>
 
     <script>
         // =================================================================
-        // ✅ إعدادات Firebase ✅
+        // TRANSLATIONS (i18n) - Full Dictionary with Currency
         // =================================================================
+        const translations = {
+            ar: {
+                currency: "د.ج",
+                appTitle: "AL CREANCE Pro", multiDbSystem: "نظام متعدد القواعد", debtorsBtn: "المتعثرين", netDebtSummary: "صافي الديون", viewFullDashPdf: "عرض الداشبورد الكامل وتصدير PDF", noDebts: "✅ لا توجد ديون متعثرة.", filterSearch: "تصفية وبحث", showFilters: "إظهار الفلاتر", hideFilters: "إخفاء الفلاتر", customer: "الزبون", all: "الكل", dateFrom: "من", dateTo: "إلى", method: "الطريقة", status: "الحالة", cash: "نقداً", check: "شيك", bankTransfer: "تحويل بنكي", card: "بطاقة", paid: "مسددة", partial: "جزئي", debt: "ديون", checks: "شيكات", quickSearch: "بحث سريع...", addInvoice: "إضافة فاتورة", addCheck: "إضافة شيك", date: "التاريخ", docNum: "رقم الوثيقة", totalAmount: "المبلغ", paidAmount: "المدفوع", remainingDebt: "المتبقي (دين)", actions: "الإجراء", total: "الإجمالي:", netDebt: "صافي الديون:", connecting: "جاري الاتصال...", addInvoiceOrPayment: "إضافة فاتورة/دفعة", cashWithEmoji: "نقداً 💵", checkWithEmoji: "شيك 🧾", transferWithEmoji: "تحويل 🏦", cardWithEmoji: "بطاقة 💳", invoiceWithEmoji: "أجل 📄", checkCovered: "شيك (مُغطى)", amount: "المبلغ", cancel: "إلغاء", save: "حفظ", renameDbs: "تسمية قواعد البيانات", saveChanges: "حفظ التغييرات", fullDebtDashboard: "لوحة قيادة الديون الكاملة", downloadPDF: "تحميل PDF", debtReport: "تقرير الديون المتعثرة", totalNetDebt: "إجمالي صافي الديون", debtorsCount: "عدد المتعثرين", checksCollected: "شيكات محصلة (مغطاة)", notes: "ملاحظات (تفاصيل الشيك)", checkNum: "رقم الشيك", dbPrefix: "قاعدة", updateSuccess: "تم التحديث 👍", addCheckSuccess: "تمت إضافة الشيك 🧾", addSuccess: "تمت الإضافة ✅", saveFail: "فشل الحفظ.", deleteConfirm: "⚠ هل أنت متأكد؟ لا يمكن التراجع.", deleteSuccess: "تم الحذف 🗑️", deleteFail: "فشل الحذف.", dbChangeSuccess: "تم الانتقال لقاعدة", paymentAlert: "تنبيه: المدفوع أكبر من الإجمالي!", connectionFail: "فشل الاتصال بقاعدة البيانات.", errorLoad: "خطأ في التحميل. تحقق من الصلاحيات.", dbSettingsTitle: "إعدادات قواعد البيانات", reportFooter: "تم استخراج هذا التقرير من نظام AL CREANCE لإدارة الديون.", pdfDate: "التاريخ", pdfDb: "قاعدة البيانات", dbPrefixShort: "ق", renamePlaceholder: "أدخل الاسم الجديد...", searchPlaceholder: "بحث سريع...", generatingPDF: "جاري إنشاء ملف PDF..."
+            },
+            fr: {
+                currency: "DZD",
+                appTitle: "AL CREANCE Pro", multiDbSystem: "Système Multi-BD", debtorsBtn: "Débiteurs", netDebtSummary: "Dette Nette", viewFullDashPdf: "Voir Tableau de Bord & PDF", noDebts: "✅ Aucune dette impayée.", filterSearch: "Filtrer & Rechercher", showFilters: "Afficher Filtres", hideFilters: "Masquer Filtres", customer: "Client", all: "Tous", dateFrom: "Du", dateTo: "Au", method: "Méthode", status: "Statut", cash: "Espèces", check: "Chèque", bankTransfer: "Virement", card: "Carte", paid: "Payé", partial: "Partiel", debt: "Dette", checks: "Chèques", quickSearch: "Recherche rapide...", addInvoice: "Ajouter Facture", addCheck: "Ajouter Chèque", date: "Date", docNum: "N° Doc", totalAmount: "Montant", paidAmount: "Payé", remainingDebt: "Reste (Dette)", actions: "Actions", total: "Total:", netDebt: "Dette Nette:", connecting: "Connexion...", addInvoiceOrPayment: "Ajouter Facture/Paiement", cashWithEmoji: "Espèces 💵", checkWithEmoji: "Chèque 🧾", transferWithEmoji: "Virement 🏦", cardWithEmoji: "Carte 💳", invoiceWithEmoji: "Facture 📄", checkCovered: "Chèque (Couvert)", amount: "Montant", cancel: "Annuler", save: "Enregistrer", renameDbs: "Renommer les Bases", saveChanges: "Sauvegarder", fullDebtDashboard: "Tableau de Bord Dettes", downloadPDF: "Télécharger PDF", debtReport: "Rapport des Dettes Impayées", totalNetDebt: "Total Dette Nette", debtorsCount: "Nombre de Débiteurs", checksCollected: "Chèques Encaissés", notes: "Notes (Détails du Chèque)", checkNum: "N° Chèque", dbPrefix: "Base", updateSuccess: "Mis à jour 👍", addCheckSuccess: "Chèque ajouté 🧾", addSuccess: "Ajouté ✅", saveFail: "Échec de l'enregistrement.", deleteConfirm: "⚠ Êtes-vous sûr ? Irréversible.", deleteSuccess: "Supprimé 🗑️", deleteFail: "Échec de la suppression.", dbChangeSuccess: "Changé vers la base", paymentAlert: "Alerte: Payé supérieur au total!", connectionFail: "Échec de connexion à la BD.", errorLoad: "Erreur de chargement.", dbSettingsTitle: "Paramètres de Base de Données", reportFooter: "Ce rapport est généré par le système de gestion de dettes AL CREANCE.", pdfDate: "Date", pdfDb: "Base de Données", dbPrefixShort: "BD", renamePlaceholder: "Entrez le nouveau nom...", searchPlaceholder: "Recherche rapide...", generatingPDF: "Génération du PDF..."
+            },
+            en: {
+                currency: "DZD",
+                appTitle: "AL CREANCE Pro", multiDbSystem: "Multi-DB System", debtorsBtn: "Debtors", netDebtSummary: "Net Debt", viewFullDashPdf: "View Full Dashboard & PDF", noDebts: "✅ No outstanding debts.", filterSearch: "Filter & Search", showFilters: "Show Filters", hideFilters: "Hide Filters", customer: "Customer", all: "All", dateFrom: "From", dateTo: "To", method: "Method", status: "Status", cash: "Cash", check: "Check", bankTransfer: "Transfer", card: "Card", paid: "Paid", partial: "Partial", debt: "Debt", checks: "Checks", quickSearch: "Quick Search...", addInvoice: "Add Invoice", addCheck: "Add Check", date: "Date", docNum: "Doc Num", totalAmount: "Amount", paidAmount: "Paid", remainingDebt: "Remaining (Debt)", actions: "Actions", total: "Total:", netDebt: "Net Debt:", connecting: "Connecting...", addInvoiceOrPayment: "Add Invoice/Payment", cashWithEmoji: "Cash 💵", checkWithEmoji: "Check 🧾", transferWithEmoji: "Transfer 🏦", cardWithEmoji: "Card 💳", invoiceWithEmoji: "Invoice 📄", checkCovered: "Check (Covered)", amount: "Amount", cancel: "Cancel", save: "Save", renameDbs: "Rename Databases", saveChanges: "Save Changes", fullDebtDashboard: "Full Debt Dashboard", downloadPDF: "Download PDF", debtReport: "Outstanding Debt Report", totalNetDebt: "Total Net Debt", debtorsCount: "Debtors Count", checksCollected: "Checks Collected", notes: "Notes (Check Details)", checkNum: "Check Num", dbPrefix: "DB", updateSuccess: "Updated 👍", addCheckSuccess: "Check added 🧾", addSuccess: "Added ✅", saveFail: "Save failed.", deleteConfirm: "⚠ Are you sure? Irreversible.", deleteSuccess: "Deleted 🗑️", deleteFail: "Delete failed.", dbChangeSuccess: "Switched to DB", paymentAlert: "Alert: Paid amount exceeds total!", connectionFail: "DB Connection Failed.", errorLoad: "Error loading data.", dbSettingsTitle: "Database Settings", reportFooter: "This report is generated by AL CREANCE Debt Management System.", pdfDate: "Date", pdfDb: "Database", dbPrefixShort: "DB", renamePlaceholder: "Enter new name...", searchPlaceholder: "Quick Search...", generatingPDF: "Generating PDF..."
+            }
+        };
+
+        let currentLang = localStorage.getItem('appLang') || 'ar';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('appLang', lang);
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    if (el.tagName === 'OPTION') el.text = translations[lang][key];
+                    else el.textContent = translations[lang][key];
+                }
+            });
+             document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.getAttribute('data-i18n-title');
+                if (translations[lang][key]) el.title = translations[lang][key];
+            });
+             document.querySelectorAll('[data-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-placeholder');
+                if (translations[lang][key]) el.placeholder = translations[lang][key];
+            });
+
+            initDbSelector(); updateDebtDropdownUI(); renderTable(); updateFilterToggleText();
+            document.getElementById('lang-selector').value = lang;
+        }
+
         const firebaseConfig = {
           apiKey: "AIzaSyDz6M1lmnQOUJ8enO5JGe4r6eq6FwQdlW0",
           authDomain: "al-creance.firebaseapp.com",
@@ -380,222 +457,134 @@
           appId: "1:511162605280:web:74a69b40c724e7ca7f7a85",
           measurementId: "G-TVR3HD1C03"
         };
-
         let db;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            if (firebase.analytics) { firebase.analytics(); }
-        } catch (error) { console.error("Firebase error:", error); showToast("فشل الاتصال بقاعدة البيانات.", "error"); }
+        try { firebase.initializeApp(firebaseConfig); db = firebase.firestore(); if (firebase.analytics) { firebase.analytics(); }} catch (error) { console.error("Firebase error:", error); showToast(t('connectionFail'), "error"); }
 
-        const DB_PREFIX = 'invoices_db';
-        const TOTAL_DBS = 10;
+        const DB_PREFIX_KEY = 'invoices_db'; const TOTAL_DBS = 10;
         let currentDbIndex = localStorage.getItem('selectedDbIndex') || '01';
-        function getCurrentCollectionName() { return `${DB_PREFIX}${currentDbIndex}`; }
+        let dbNames = JSON.parse(localStorage.getItem('dbNames')) || {};
+        function getCurrentCollectionName() { return `${DB_PREFIX_KEY}${currentDbIndex}`; }
+        function t(key) { return translations[currentLang][key] || key; }
 
         function initDbSelector() {
-            const selector = document.getElementById('db-selector');
+            const selector = document.getElementById('db-selector'); selector.innerHTML = '';
             for (let i = 1; i <= TOTAL_DBS; i++) {
-                const index = i.toString().padStart(2, '0');
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = `قاعدة ${i}`;
-                selector.appendChild(option);
+                const index = i.toString().padStart(2, '0'); const option = document.createElement('option'); option.value = index;
+                option.textContent = dbNames[index] || `${t('dbPrefixShort')} ${index}`; selector.appendChild(option);
             }
-            selector.value = currentDbIndex;
-            updateDbLoadingName();
+            selector.value = currentDbIndex; updateDbLoadingName();
         }
-
         async function changeDatabase(newIndex) {
-            if (newIndex === currentDbIndex) return;
-            currentDbIndex = newIndex;
-            localStorage.setItem('selectedDbIndex', newIndex);
-            updateDbLoadingName();
-            invoices = []; renderTable(); updateDebtDropdownUI();
-            document.getElementById('loading-message').classList.remove('hidden');
-            toggleActionButtons(false);
-            await loadInvoices();
-            showToast(`تم الانتقال لقاعدة ${parseInt(newIndex)}.`, 'success');
+            if (newIndex === currentDbIndex) return; currentDbIndex = newIndex; localStorage.setItem('selectedDbIndex', newIndex); updateDbLoadingName(); invoices = []; renderTable(); updateDebtDropdownUI(); document.getElementById('loading-message').classList.remove('hidden'); toggleActionButtons(false); await loadInvoices(); showToast(`${t('dbChangeSuccess')} ${parseInt(newIndex)}.`, 'success');
         }
-        function updateDbLoadingName() { document.getElementById('db-loading-name').textContent = `(DB: ${parseInt(currentDbIndex)})`; }
-        function toggleActionButtons(enable) {
-            document.getElementById('add-invoice-button').disabled = !enable;
-            document.getElementById('add-check-button').disabled = !enable;
+        function updateDbLoadingName() { const name = dbNames[currentDbIndex] || `${t('dbPrefix')} ${currentDbIndex}`; document.getElementById('db-loading-name').textContent = `(${name})`; }
+        function openDbRenameModal() {
+            const container = document.getElementById('db-names-inputs'); container.innerHTML = '';
+            for (let i = 1; i <= TOTAL_DBS; i++) {
+                const index = i.toString().padStart(2, '0'); const div = document.createElement('div'); div.className = 'flex items-center';
+                div.innerHTML = `<span class="w-16 text-sm font-bold text-slate-500">${t('dbPrefixShort')} ${index}</span><input type="text" data-db-index="${index}" value="${dbNames[index] || ''}" placeholder="${t('renamePlaceholder')}" class="flex-1 p-2 border border-slate-300 rounded-lg text-sm focus:ring-1 focus:ring-blue-500">`; container.appendChild(div);
+            }
+            document.getElementById('db-rename-modal').classList.remove('hidden'); setTimeout(() => document.getElementById('db-rename-modal').classList.add('flex'), 10);
+        }
+        function closeDbRenameModal() { const modal = document.getElementById('db-rename-modal'); modal.classList.remove('flex'); setTimeout(() => modal.classList.add('hidden'), 200); }
+        function saveDbNames() {
+            const inputs = document.querySelectorAll('#db-names-inputs input'); inputs.forEach(input => { const index = input.getAttribute('data-db-index'); const value = input.value.trim(); if (value) { dbNames[index] = value; } else { delete dbNames[index]; } }); localStorage.setItem('dbNames', JSON.stringify(dbNames)); initDbSelector(); closeDbRenameModal(); showToast(t('updateSuccess'), 'success');
         }
 
-        let invoices = [];
-        let currentSortColumn = 'date';
-        let currentSortDirection = 'desc';
-
+        function toggleActionButtons(enable) { document.getElementById('add-invoice-button').disabled = !enable; document.getElementById('add-check-button').disabled = !enable; }
+        let invoices = []; let currentSortColumn = 'date'; let currentSortDirection = 'desc';
         async function loadInvoices() {
-            if (!db) return;
-            const collectionName = getCurrentCollectionName();
-            if (invoices.length > 0) toggleTableLoading(true);
-            try {
-                const querySnapshot = await db.collection(collectionName).orderBy('date', 'desc').get();
-                invoices = [];
-                querySnapshot.forEach((doc) => {
-                    let data = doc.data();
-                    invoices.push({ id: doc.id, ...data, amount: parseFloat(data.amount || 0), paidAmount: parseFloat(data.paidAmount || 0), remaining: parseFloat(data.amount || 0) - parseFloat(data.paidAmount || 0) });
-                });
-                document.getElementById('loading-message').classList.add('hidden');
-                toggleActionButtons(true);
-                populateCustomerFilter(); renderTable(); updateDebtDropdownUI();
-            } catch (error) { console.error("Error:", error); showToast("خطأ في التحميل. تحقق من الصلاحيات.", "error"); } finally { toggleTableLoading(false); }
+            if (!db) return; const collectionName = getCurrentCollectionName(); if (invoices.length > 0) toggleTableLoading(true);
+            try { const querySnapshot = await db.collection(collectionName).orderBy('date', 'desc').get(); invoices = []; querySnapshot.forEach((doc) => { let data = doc.data(); invoices.push({ id: doc.id, ...data, amount: parseFloat(data.amount || 0), paidAmount: parseFloat(data.paidAmount || 0), remaining: parseFloat(data.amount || 0) - parseFloat(data.paidAmount || 0) }); }); document.getElementById('loading-message').classList.add('hidden'); toggleActionButtons(true); populateCustomerFilter(); renderTable(); updateDebtDropdownUI(); } catch (error) { console.error("Error:", error); showToast(t('errorLoad'), "error"); } finally { toggleTableLoading(false); }
+        }
+
+        function handlePaymentMethodChange() {
+            const method = document.getElementById('paymentMethod').value; const paidAmountContainer = document.getElementById('paidAmountContainer'); const notesContainer = document.getElementById('notesContainer'); const checkReadOnly = document.getElementById('checkReadOnlyField'); const paymentMethodContainer = document.getElementById('paymentMethodContainer');
+            if (method === 'شيك') { paidAmountContainer.classList.add('hidden'); notesContainer.classList.remove('hidden'); if(paymentMethodContainer.classList.contains('hidden-force')) { paymentMethodContainer.classList.remove('hidden-force'); checkReadOnly.classList.add('hidden'); }} else { paidAmountContainer.classList.remove('hidden'); notesContainer.classList.add('hidden'); }
         }
 
         async function handleFormSubmit(event) {
-            event.preventDefault();
-            const submitBtn = document.getElementById('modal-submit-button');
-            const originalBtnText = submitBtn.innerHTML;
-            submitBtn.disabled = true; submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-
-            const docId = document.getElementById('doc-id').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const paidAmount = parseFloat(document.getElementById('paidAmount').value);
-            const paymentMethodSelect = document.getElementById('paymentMethod');
-            const dataToSave = { customer: document.getElementById('customer').value, date: document.getElementById('date').value, invoiceNum: document.getElementById('invoiceNum').value, amount: amount.toFixed(2), paymentMethod: paymentMethodSelect.value, paidAmount: paidAmount.toFixed(2) };
-
-            if (dataToSave.paymentMethod !== 'شيك' && paidAmount > amount) { showToast("تنبيه: المدفوع أكبر من الإجمالي!", 'error'); submitBtn.disabled = false; submitBtn.innerHTML = originalBtnText; return; }
+            event.preventDefault(); const submitBtn = document.getElementById('modal-submit-button'); const originalBtnText = submitBtn.innerHTML; submitBtn.disabled = true; submitBtn.innerHTML = '<svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            const docId = document.getElementById('doc-id').value; const amount = parseFloat(document.getElementById('amount').value); let paidAmount = parseFloat(document.getElementById('paidAmount').value); const paymentMethodSelect = document.getElementById('paymentMethod'); const notesVal = document.getElementById('notes').value;
+            let finalPaidAmount = paidAmount; let finalNotes = notesVal;
+            if (paymentMethodSelect.value === 'شيك') { finalPaidAmount = amount; } else { if(!document.getElementById('paymentMethodContainer').classList.contains('hidden-force')) { finalNotes = ''; }}
+            const dataToSave = { customer: document.getElementById('customer').value, date: document.getElementById('date').value, invoiceNum: document.getElementById('invoiceNum').value, amount: amount.toFixed(2), paymentMethod: paymentMethodSelect.value, paidAmount: finalPaidAmount.toFixed(2), notes: finalNotes };
+            if (dataToSave.paymentMethod !== 'شيك' && finalPaidAmount > amount) { showToast(t('paymentAlert'), 'error'); submitBtn.disabled = false; submitBtn.innerHTML = originalBtnText; return; }
             const collectionName = getCurrentCollectionName();
-            try {
-                if (docId) { await db.collection(collectionName).doc(docId).update(dataToSave); showToast("تم التحديث 👍", 'success'); } else { await db.collection(collectionName).add(dataToSave); showToast(dataToSave.paymentMethod === 'شيك' ? "تمت إضافة الشيك 🧾" : "تمت الإضافة ✅", 'success'); }
-                closeModal(); await loadInvoices();
-            } catch (error) { console.error("Error saving:", error); showToast("فشل الحفظ.", 'error'); } finally { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnText; }
+            try { if (docId) { await db.collection(collectionName).doc(docId).update(dataToSave); showToast(t('updateSuccess'), 'success'); } else { await db.collection(collectionName).add(dataToSave); showToast(dataToSave.paymentMethod === 'شيك' ? t('addCheckSuccess') : t('addSuccess'), 'success'); } closeModal(); await loadInvoices(); } catch (error) { console.error("Error saving:", error); showToast(t('saveFail'), 'error'); } finally { submitBtn.disabled = false; submitBtn.innerHTML = originalBtnText; }
         }
 
-        async function deleteInvoice(id) {
-            if (!confirm('⚠ هل أنت متأكد؟ لا يمكن التراجع.')) return;
-            toggleTableLoading(true); const collectionName = getCurrentCollectionName();
-            try { await db.collection(collectionName).doc(id).delete(); showToast("تم الحذف 🗑️", 'success'); await loadInvoices(); } catch (error) { console.error("Error deleting:", error); showToast("فشل الحذف.", 'error'); toggleTableLoading(false); }
-        }
+        async function deleteInvoice(id) { if (!confirm(t('deleteConfirm'))) return; toggleTableLoading(true); const collectionName = getCurrentCollectionName(); try { await db.collection(collectionName).doc(id).delete(); showToast(t('deleteSuccess'), 'success'); await loadInvoices(); } catch (error) { console.error("Error deleting:", error); showToast(t('deleteFail'), 'error'); toggleTableLoading(false); }}
 
         function toggleDebtDropdown() { document.getElementById('debt-dropdown-menu').classList.toggle('hidden'); }
         document.addEventListener('click', function(event) { const container = document.getElementById('debt-dropdown-container'); if (!container.contains(event.target)) { document.getElementById('debt-dropdown-menu').classList.add('hidden'); } });
 
         function updateDebtDropdownUI() {
-            const debtListItems = document.getElementById('debt-list-items'); const noDebtMessage = document.getElementById('no-debt-message'); const badge = document.getElementById('debt-count-badge');
-            debtListItems.innerHTML = '';
-            const customerDebts = {};
-            invoices.forEach(inv => { const customerName = inv.customer || 'غير محدد'; if (!customerDebts[customerName]) customerDebts[customerName] = 0; if (inv.paymentMethod === 'شيك') { customerDebts[customerName] -= inv.amount; } else { customerDebts[customerName] += inv.remaining; } });
-            const indebtedCustomers = Object.entries(customerDebts).filter(([_, debt]) => debt > 1.00).sort(([_, debtA], [__, debtB]) => debtB - debtA);
-            if (indebtedCustomers.length > 0) {
-                badge.textContent = indebtedCustomers.length; badge.classList.remove('hidden'); noDebtMessage.classList.add('hidden');
-                indebtedCustomers.forEach(([customer, debt]) => { const li = document.createElement('li'); li.className = 'px-3 py-2 flex justify-between items-center hover:bg-slate-50 transition text-xs'; li.innerHTML = `<span class="font-bold text-slate-700 truncate mr-2" title="${customer}">${customer}</span><span class="font-mono font-bold text-red-600 whitespace-nowrap">${debt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="text-[10px]">د.ج</span></span>`; debtListItems.appendChild(li); });
-            } else { badge.classList.add('hidden'); noDebtMessage.classList.remove('hidden'); }
+            const debtListItems = document.getElementById('debt-list-items'); const noDebtMessage = document.getElementById('no-debt-message'); const badge = document.getElementById('debt-count-badge'); debtListItems.innerHTML = ''; const customerDebts = calculateCustomerDebts();
+            if (customerDebts.indebted.length > 0) { badge.textContent = customerDebts.indebted.length; badge.classList.remove('hidden'); noDebtMessage.classList.add('hidden'); customerDebts.indebted.forEach(([customer, debt]) => { const li = document.createElement('li'); li.className = 'px-3 py-2 flex justify-between items-center hover:bg-slate-50 transition text-xs'; li.innerHTML = `<span class="font-bold text-slate-700 truncate mr-2" title="${customer}">${customer}</span><span class="font-mono font-bold text-red-600 whitespace-nowrap rtl:mr-auto ltr:ml-auto" dir="ltr">${debt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span class="text-[10px]"> ${t('currency')}</span></span>`; debtListItems.appendChild(li); }); } else { badge.classList.add('hidden'); noDebtMessage.classList.remove('hidden'); }
+        }
+        function calculateCustomerDebts() { const debts = {}; let totalChecks = 0; invoices.forEach(inv => { const customerName = inv.customer || 'Unknown'; if (!debts[customerName]) debts[customerName] = 0; if (inv.paymentMethod === 'شيك') { debts[customerName] -= inv.amount; totalChecks += inv.amount; } else { debts[customerName] += inv.remaining; } }); const indebted = Object.entries(debts).filter(([_, debt]) => debt > 1.00).sort(([_, debtA], [__, debtB]) => debtB - debtA); const totalNetDebt = indebted.reduce((sum, [_, debt]) => sum + debt, 0); return { indebted, totalNetDebt, totalChecks }; }
+
+        function openFullDashboard() {
+            const modal = document.getElementById('full-dashboard-modal'); const tableBody = document.getElementById('pdf-table-body'); const noDataMsg = document.getElementById('pdf-no-data'); const debtData = calculateCustomerDebts();
+            document.getElementById('pdf-total-debt').textContent = debtData.totalNetDebt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency'); document.getElementById('pdf-debtors-count').textContent = debtData.indebted.length; document.getElementById('pdf-total-checks').textContent = debtData.totalChecks.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency');
+            const dbNameStr = dbNames[currentDbIndex] || `${t('dbPrefix')} ${currentDbIndex}`; document.getElementById('pdf-date-db').textContent = `${t('pdfDate')}: ${new Date().toLocaleDateString()} | ${t('pdfDb')}: ${dbNameStr}`;
+            tableBody.innerHTML = ''; if (debtData.indebted.length > 0) { noDataMsg.classList.add('hidden'); debtData.indebted.forEach(([customer, debt]) => { tableBody.innerHTML += `<tr><td class="px-4 py-3 text-start text-sm font-bold text-slate-800">${customer}</td><td class="px-4 py-3 text-start text-sm font-mono font-bold text-red-600" dir="ltr">${debt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td><td class="px-4 py-3 text-start text-xs"><span class="px-2 py-1 bg-red-100 text-red-700 rounded-full font-bold">${t('debt')}</span></td></tr>`; }); } else { noDataMsg.classList.remove('hidden'); }
+            modal.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+        }
+        function closeFullDashboard() { document.getElementById('full-dashboard-modal').classList.add('hidden'); document.body.style.overflow = 'auto'; }
+        
+        // Updated PDF Export function for higher quality and correct direction
+        function exportDashboardToPDF() {
+            const element = document.getElementById('pdf-content');
+            // Use scale 3 for higher resolution, remove explicit dir setting to use body's dir
+            const opt = { margin: [10, 10], filename: `Debt_Report_${new Date().toISOString().split('T')[0]}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 3, useCORS: true, logging: false }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            showToast(t('generatingPDF'), "info"); html2pdf().set(opt).from(element).save();
         }
 
-        function populateCustomerFilter() {
-            const customerSelect = document.getElementById('customer-filter'); const currentSelection = customerSelect.value; customerSelect.innerHTML = '<option value="">الكل</option>';
-            const customers = [...new Set(invoices.map(inv => inv.customer).filter(Boolean))].sort();
-            customers.forEach(customer => { const option = document.createElement('option'); option.value = customer; option.textContent = customer; customerSelect.appendChild(option); });
-             customerSelect.value = currentSelection;
-        }
-
-        window.sortData = function(column) {
-            if (currentSortColumn === column) { currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc'; } else { currentSortColumn = column; currentSortDirection = 'asc'; }
-            invoices.sort((a, b) => { let aVal = a[column]; let bVal = b[column]; if (column === 'date') { aVal = new Date(aVal); bVal = new Date(bVal); } else if (typeof aVal === 'string') { aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase(); } if (aVal < bVal) return currentSortDirection === 'asc' ? -1 : 1; if (aVal > bVal) return currentSortDirection === 'asc' ? 1 : -1; return 0; });
-            renderTable();
-        }
+        function populateCustomerFilter() { const customerSelect = document.getElementById('customer-filter'); const currentSelection = customerSelect.value; const allOption = customerSelect.firstElementChild; customerSelect.innerHTML = ''; customerSelect.appendChild(allOption); const customers = [...new Set(invoices.map(inv => inv.customer).filter(Boolean))].sort(); customers.forEach(customer => { const option = document.createElement('option'); option.value = customer; option.textContent = customer; customerSelect.appendChild(option); }); customerSelect.value = currentSelection; }
+        window.sortData = function(column) { if (currentSortColumn === column) { currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc'; } else { currentSortColumn = column; currentSortDirection = 'asc'; } invoices.sort((a, b) => { let aVal = a[column]; let bVal = b[column]; if (column === 'date') { aVal = new Date(aVal); bVal = new Date(bVal); } else if (typeof aVal === 'string') { aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase(); } if (aVal < bVal) return currentSortDirection === 'asc' ? -1 : 1; if (aVal > bVal) return currentSortDirection === 'asc' ? 1 : -1; return 0; }); renderTable(); }
         window.filterInvoices = function() { renderTable(); }
-
-        // ⭐ دالة لتوسيع/طي الصفوف في الموبايل ⭐
-        window.toggleRow = function(rowElement) {
-            // التحقق من أننا على الموبايل
-            if (window.innerWidth <= 768) {
-                rowElement.classList.toggle('expanded');
-            }
-        }
+        window.toggleRow = function(rowElement) { if (window.innerWidth <= 768) { rowElement.classList.toggle('expanded'); } }
 
         function renderTable() {
             const tableBody = document.getElementById('invoice-table-body'); const searchInput = document.getElementById('global-search').value.toLowerCase(); const customerFilter = document.getElementById('customer-filter').value; const dateFrom = document.getElementById('date-from').value; const dateTo = document.getElementById('date-to').value; const paymentFilter = document.getElementById('payment-filter').value; const statusFilter = document.getElementById('status-filter').value;
-            const filteredInvoices = invoices.filter(invoice => { const isCheck = invoice.paymentMethod === 'شيك'; const effectiveRemainingForFilter = isCheck ? 0 : invoice.remaining; const searchMatch = !searchInput || (invoice.customer || '').toLowerCase().includes(searchInput) || (invoice.invoiceNum || '').toLowerCase().includes(searchInput) || (invoice.paymentMethod || '').toLowerCase().includes(searchInput) || (invoice.amount.toFixed(2)).includes(searchInput); const customerMatch = !customerFilter || invoice.customer === customerFilter; let dateMatch = true; if (dateFrom) dateMatch = dateMatch && invoice.date >= dateFrom; if (dateTo) dateMatch = dateMatch && invoice.date <= dateTo; const paymentMatch = !paymentFilter || invoice.paymentMethod === paymentFilter; let statusMatch = true; if (statusFilter === 'paid') statusMatch = isCheck || effectiveRemainingForFilter <= 0.01; else if (statusFilter === 'unpaid') statusMatch = !isCheck && effectiveRemainingForFilter > 0.01 && invoice.paidAmount < 0.01; else if (statusFilter === 'partial') statusMatch = !isCheck && effectiveRemainingForFilter > 0.01 && invoice.paidAmount > 0.01; else if (statusFilter === 'check') statusMatch = isCheck; return searchMatch && paymentMatch && statusMatch && customerMatch && dateMatch; });
+            const filteredInvoices = invoices.filter(invoice => { const isCheck = invoice.paymentMethod === 'شيك'; const effectiveRemainingForFilter = isCheck ? 0 : invoice.remaining; const searchMatch = !searchInput || (invoice.customer || '').toLowerCase().includes(searchInput) || (invoice.invoiceNum || '').toLowerCase().includes(searchInput) || (invoice.paymentMethod || '').toLowerCase().includes(searchInput) || (invoice.amount.toFixed(2)).includes(searchInput) || (invoice.notes || '').toLowerCase().includes(searchInput); const customerMatch = !customerFilter || invoice.customer === customerFilter; let dateMatch = true; if (dateFrom) dateMatch = dateMatch && invoice.date >= dateFrom; if (dateTo) dateMatch = dateMatch && invoice.date <= dateTo; const paymentMatch = !paymentFilter || invoice.paymentMethod === paymentFilter; let statusMatch = true; if (statusFilter === 'paid') statusMatch = isCheck || effectiveRemainingForFilter <= 0.01; else if (statusFilter === 'unpaid') statusMatch = !isCheck && effectiveRemainingForFilter > 0.01 && invoice.paidAmount < 0.01; else if (statusFilter === 'partial') statusMatch = !isCheck && effectiveRemainingForFilter > 0.01 && invoice.paidAmount > 0.01; else if (statusFilter === 'check') statusMatch = isCheck; return searchMatch && paymentMatch && statusMatch && customerMatch && dateMatch; });
             document.querySelectorAll('.sort-icon').forEach(span => span.textContent = ''); const icon = document.getElementById(`sort-${currentSortColumn}`); if (icon) icon.textContent = currentSortDirection === 'asc' ? '▲' : '▼';
             let html = ''; let totalAmount = 0; let totalPaid = 0; let netDebtBalance = 0;
             filteredInvoices.forEach((invoice) => {
                 const isCheck = invoice.paymentMethod === 'شيك'; totalAmount += invoice.amount; totalPaid += invoice.paidAmount; if (isCheck) netDebtBalance -= invoice.amount; else netDebtBalance += invoice.remaining;
                 const displayRemainingForRow = isCheck ? 0 : invoice.remaining; let remainingClass = ''; let statusBadge = ''; let paymentMethodDisplay = invoice.paymentMethod || '---'; let rowBgClass = 'bg-white hover:bg-slate-50';
-                if (isCheck) { paymentMethodDisplay = '<span class="flex items-center text-green-700 font-bold"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>شيك</span>'; remainingClass = 'text-green-700 font-bold'; statusBadge = '<span class="text-[9px] mr-1 p-0.5 px-1.5 rounded-full bg-green-50 text-green-700 border border-green-100">مُغطى</span>'; rowBgClass = 'bg-green-50/20 hover:bg-green-50/40'; } 
-                else { if (displayRemainingForRow > 0.01) { remainingClass = 'text-red-600 font-extrabold'; let statusText = invoice.paidAmount > 0.01 ? 'جزئي' : 'دين'; let statusBg = invoice.paidAmount > 0.01 ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-red-50 text-red-700 border-red-100'; statusBadge = `<span class="text-[9px] mr-1 p-0.5 px-1.5 rounded-full border ${statusBg}">${statusText}</span>`; if (invoice.paidAmount <= 0.01) rowBgClass = 'bg-red-50/20 hover:bg-red-50/40'; } else if (invoice.amount > 0.01) { remainingClass = 'text-green-600 font-bold'; statusBadge = '<span class="text-[9px] mr-1 p-0.5 px-1.5 rounded-full bg-green-100 text-green-700 border border-green-200">خالص</span>'; } else { remainingClass = 'text-slate-400 font-medium'; statusBadge = ''; } }
-                
-                // ⭐ بناء الصف مع إضافة كلاسات mobile-summary و mobile-detail وحدث النقر ⭐
-                html += `
-                    <tr class="${rowBgClass} transition duration-150 ease-in-out group" onclick="toggleRow(this)">
-                        <td class="excel-cell whitespace-nowrap font-bold text-slate-800 mobile-summary" data-label="الزبون">
-                            ${invoice.customer || '<span class="text-slate-400">غير محدد</span>'}
-                        </td>
-                        <td class="excel-cell whitespace-nowrap text-slate-600 font-medium font-mono text-xs mobile-detail" data-label="التاريخ">${invoice.date || '---'}</td>
-                        <td class="excel-cell whitespace-nowrap text-slate-700 font-mono text-xs mobile-summary" data-label="رقم الوثيقة">
-                            <span class="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">${invoice.invoiceNum || '---'}</span>
-                        </td>
-                        <td class="excel-cell whitespace-nowrap text-slate-800 text-left font-mono font-semibold mobile-summary" data-label="المبلغ">
-                            ${invoice.amount.toFixed(2)}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 mr-2 md:hidden expand-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                        </td>
-                        <td class="excel-cell whitespace-nowrap text-xs mobile-detail" data-label="الطريقة">${paymentMethodDisplay}</td>
-                        <td class="excel-cell whitespace-nowrap text-slate-800 text-left font-mono text-xs mobile-detail" data-label="المدفوع">${invoice.paidAmount.toFixed(2)}</td>
-                        <td class="excel-cell whitespace-nowrap ${remainingClass} text-left font-mono text-sm mobile-detail" data-label="المتبقي (دين)">${displayRemainingForRow.toFixed(2)} ${statusBadge}</td>
-                        <td class="excel-cell whitespace-nowrap text-right font-medium md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mobile-detail" data-label="الإجراء"><div class="flex items-center justify-end space-x-1 space-x-reverse"><button onclick="event.stopPropagation(); openModal('${invoice.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button onclick="event.stopPropagation(); deleteInvoice('${invoice.id}')" class="text-red-500 hover:bg-red-50 p-1.5 rounded transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></div></td>
-                    </tr>`;
+                let translatedMethod = invoice.paymentMethod; if (currentLang !== 'ar') { if(invoice.paymentMethod === 'نقداً') translatedMethod = t('cash'); if(invoice.paymentMethod === 'شيك') translatedMethod = t('check'); if(invoice.paymentMethod === 'تحويل بنكي') translatedMethod = t('bankTransfer'); if(invoice.paymentMethod === 'بطاقة') translatedMethod = t('card'); }
+                if (isCheck) { paymentMethodDisplay = `<span class="flex items-center text-green-700 font-bold"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 rtl:ml-1 ltr:mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>${translatedMethod}</span>`; remainingClass = 'text-green-700 font-bold'; statusBadge = `<span class="text-[9px] rtl:mr-1 ltr:ml-1 p-0.5 px-1.5 rounded-full bg-green-50 text-green-700 border border-green-100">${t('checkCovered')}</span>`; rowBgClass = 'bg-green-50/20 hover:bg-green-50/40'; } else { if (displayRemainingForRow > 0.01) { remainingClass = 'text-red-600 font-extrabold'; let statusText = invoice.paidAmount > 0.01 ? t('partial') : t('debt'); let statusBg = invoice.paidAmount > 0.01 ? 'bg-orange-50 text-orange-700 border-orange-100' : 'bg-red-50 text-red-700 border-red-100'; statusBadge = `<span class="text-[9px] rtl:mr-1 ltr:ml-1 p-0.5 px-1.5 rounded-full border ${statusBg}">${statusText}</span>`; if (invoice.paidAmount <= 0.01) rowBgClass = 'bg-red-50/20 hover:bg-red-50/40'; } else if (invoice.amount > 0.01) { remainingClass = 'text-green-600 font-bold'; statusBadge = `<span class="text-[9px] rtl:mr-1 ltr:ml-1 p-0.5 px-1.5 rounded-full bg-green-100 text-green-700 border border-green-200">${t('paid')}</span>`; } else { remainingClass = 'text-slate-400 font-medium'; statusBadge = ''; } }
+                const noteIndicator = invoice.notes ? `<span class="rtl:mr-1 ltr:ml-1 text-slate-400" title="${invoice.notes}">📝</span>` : '';
+                html += `<tr class="${rowBgClass} transition duration-150 ease-in-out group" onclick="toggleRow(this)"><td class="excel-cell whitespace-nowrap font-bold text-slate-800 mobile-summary relative"><span class="cell-label">${t('customer')}</span>${invoice.customer || '<span class="text-slate-400">Unknown</span>'} ${noteIndicator}</td><td class="excel-cell whitespace-nowrap text-slate-600 font-medium font-mono text-xs mobile-detail"><span class="cell-label">${t('date')}</span>${invoice.date || '---'}</td><td class="excel-cell whitespace-nowrap text-slate-700 font-mono text-xs mobile-summary"><span class="cell-label">${t('docNum')}</span><span class="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">${invoice.invoiceNum || '---'}</span></td><td class="excel-cell whitespace-nowrap text-slate-800 rtl:text-right ltr:text-left font-mono font-semibold mobile-summary" data-type="amount"><span class="cell-label">${t('totalAmount')}</span>${invoice.amount.toFixed(2)}<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 rtl:mr-auto ltr:ml-auto rtl:ml-2 md:hidden expand-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg></td><td class="excel-cell whitespace-nowrap text-xs mobile-detail"><span class="cell-label">${t('method')}</span>${paymentMethodDisplay}</td><td class="excel-cell whitespace-nowrap text-slate-800 rtl:text-right ltr:text-left font-mono text-xs mobile-detail"><span class="cell-label">${t('paidAmount')}</span>${invoice.paidAmount.toFixed(2)}</td><td class="excel-cell whitespace-nowrap ${remainingClass} rtl:text-right ltr:text-left font-mono text-sm mobile-detail"><span class="cell-label">${t('remainingDebt')}</span>${displayRemainingForRow.toFixed(2)} ${statusBadge}</td><td class="excel-cell whitespace-nowrap text-right font-medium md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 mobile-detail"><div class="flex items-center justify-end space-x-1 space-x-reverse"><button onclick="event.stopPropagation(); openModal('${invoice.id}')" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button onclick="event.stopPropagation(); deleteInvoice('${invoice.id}')" class="text-red-500 hover:bg-red-50 p-1.5 rounded transition"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></div></td></tr>`;
             });
-            if (filteredInvoices.length === 0) html = `<tr><td colspan="8" class="text-center p-8 text-slate-400 text-sm">لا توجد سجلات.</td></tr>`;
+            if (filteredInvoices.length === 0) html = `<tr><td colspan="8" class="text-center p-8 text-slate-400 text-sm">No records found.</td></tr>`;
             tableBody.innerHTML = html;
-            // تحديث الإجماليات
-            const totalAmountStr = totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const totalPaidStr = totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const totalRemainingStr = Math.max(0, netDebtBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            document.getElementById('total-amount').textContent = totalAmountStr + ' د.ج';
-            document.getElementById('total-amount-mobile').textContent = totalAmountStr;
-            document.getElementById('total-paid').textContent = totalPaidStr + ' د.ج';
-            document.getElementById('total-paid-mobile').textContent = totalPaidStr;
-            document.getElementById('total-remaining').textContent = totalRemainingStr + ' د.ج (صافي الديون)';
-            document.getElementById('total-remaining-mobile').textContent = totalRemainingStr + ' د.ج';
+            // تحديث الإجماليات في التذييل مع العملة المترجمة
+            document.getElementById('total-amount').textContent = totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency'); document.getElementById('total-amount-mobile').textContent = totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency');
+            document.getElementById('total-paid').textContent = totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency'); document.getElementById('total-paid-mobile').textContent = totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency');
+            document.getElementById('total-remaining').textContent = Math.max(0, netDebtBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency'); document.getElementById('total-remaining-mobile').textContent = Math.max(0, netDebtBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + t('currency');
         }
 
         window.openCheckModal = function() {
-            openModal(null);
-            document.getElementById('modal-title').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> إضافة شيك 🧾';
-            document.getElementById('invoiceNumLabel').innerHTML = 'رقم الشيك <span class="text-red-500">*</span>';
-            const submitBtn = document.getElementById('modal-submit-button'); submitBtn.textContent = 'حفظ الشيك'; submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); submitBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-            document.getElementById('paymentMethod').value = 'شيك'; document.getElementById('paymentMethodContainer').classList.add('hidden-force'); document.getElementById('checkReadOnlyField').classList.remove('hidden');
+            openModal(null); document.getElementById('modal-title').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 rtl:ml-2 ltr:mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ${t('addCheck')}`; document.getElementById('invoiceNumLabel').innerHTML = `${t('checkNum')} <span class="text-red-500">*</span>`; const submitBtn = document.getElementById('modal-submit-button'); submitBtn.textContent = t('save'); submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); submitBtn.classList.add('bg-green-600', 'hover:bg-green-700'); document.getElementById('paymentMethod').value = 'شيك'; document.getElementById('paymentMethodContainer').classList.add('hidden-force'); document.getElementById('checkReadOnlyField').classList.remove('hidden'); handlePaymentMethodChange();
         }
         window.openModal = function(id = null) {
             const modal = document.getElementById('invoice-modal'); const form = document.getElementById('invoice-form'); const paymentSelect = document.getElementById('paymentMethod'); const paymentContainer = document.getElementById('paymentMethodContainer'); const checkReadOnly = document.getElementById('checkReadOnlyField'); const submitBtn = document.getElementById('modal-submit-button');
-            form.reset(); document.getElementById('doc-id').value = id || ''; paymentContainer.classList.remove('hidden-force'); checkReadOnly.classList.add('hidden'); paymentSelect.disabled = false; document.getElementById('invoiceNumLabel').innerHTML = 'رقم الوثيقة <span class="text-red-500">*</span>'; submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700'); submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-            if (!id) { document.getElementById('date').value = new Date().toISOString().split('T')[0]; document.getElementById('modal-title').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 ml-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> إضافة فاتورة/دفعة'; submitBtn.textContent = 'حفظ'; document.getElementById('amount').value = '0.00'; document.getElementById('paidAmount').value = '0.00'; paymentSelect.value = 'نقداً'; } 
-            else { const invoice = invoices.find(inv => inv.id === id); if (invoice) { document.getElementById('customer').value = invoice.customer || ''; document.getElementById('date').value = invoice.date || ''; document.getElementById('invoiceNum').value = invoice.invoiceNum || ''; document.getElementById('amount').value = invoice.amount.toFixed(2); paymentSelect.value = invoice.paymentMethod || 'نقداً'; document.getElementById('paidAmount').value = invoice.paidAmount.toFixed(2); document.getElementById('modal-title').textContent = 'تعديل (' + invoice.invoiceNum + ')'; submitBtn.textContent = 'تحديث'; if (invoice.paymentMethod === 'شيك') { document.getElementById('invoiceNumLabel').innerHTML = 'رقم الشيك <span class="text-red-500">*</span>'; paymentContainer.classList.add('hidden-force'); checkReadOnly.classList.remove('hidden'); submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); submitBtn.classList.add('bg-green-600', 'hover:bg-green-700'); } } }
-            modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('flex'), 10);
+            form.reset(); document.getElementById('doc-id').value = id || ''; paymentContainer.classList.remove('hidden-force'); checkReadOnly.classList.add('hidden'); paymentSelect.disabled = false; document.getElementById('invoiceNumLabel').innerHTML = `${t('docNum')} <span class="text-red-500">*</span>`; submitBtn.classList.remove('bg-green-600', 'hover:bg-green-700'); submitBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            if (!id) { document.getElementById('date').value = new Date().toISOString().split('T')[0]; document.getElementById('modal-title').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 rtl:ml-2 ltr:mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> ${t('addInvoiceOrPayment')}`; submitBtn.textContent = t('save'); document.getElementById('amount').value = '0.00'; document.getElementById('paidAmount').value = '0.00'; paymentSelect.value = 'نقداً'; } 
+            else { const invoice = invoices.find(inv => inv.id === id); if (invoice) { document.getElementById('customer').value = invoice.customer || ''; document.getElementById('date').value = invoice.date || ''; document.getElementById('invoiceNum').value = invoice.invoiceNum || ''; document.getElementById('amount').value = invoice.amount.toFixed(2); paymentSelect.value = invoice.paymentMethod || 'نقداً'; document.getElementById('paidAmount').value = invoice.paidAmount.toFixed(2); document.getElementById('notes').value = invoice.notes || ''; document.getElementById('modal-title').textContent = `Edit (${invoice.invoiceNum})`; submitBtn.textContent = t('save'); if (invoice.paymentMethod === 'شيك') { document.getElementById('invoiceNumLabel').innerHTML = `${t('checkNum')} <span class="text-red-500">*</span>`; paymentContainer.classList.add('hidden-force'); checkReadOnly.classList.remove('hidden'); submitBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700'); submitBtn.classList.add('bg-green-600', 'hover:bg-green-700'); } } }
+            handlePaymentMethodChange(); modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('flex'), 10);
         }
         window.closeModal = function() { const modal = document.getElementById('invoice-modal'); modal.classList.remove('flex'); setTimeout(() => modal.classList.add('hidden'), 200); }
         function toggleTableLoading(isLoading) { document.getElementById('table-loading-overlay').classList.toggle('hidden', !isLoading); }
+        function toggleFilters() { const container = document.getElementById('filters-container'); const icon = document.getElementById('filter-toggle-icon'); const text = document.getElementById('filter-toggle-text'); container.classList.toggle('hidden'); if (container.classList.contains('hidden')) { icon.classList.remove('rotate-180'); text.textContent = t('showFilters'); } else { icon.classList.add('rotate-180'); text.textContent = t('hideFilters'); } }
+        function updateFilterToggleText() { const container = document.getElementById('filters-container'); const text = document.getElementById('filter-toggle-text'); text.textContent = container.classList.contains('hidden') ? t('showFilters') : t('hideFilters'); }
+        function showToast(message, type = 'info') { const container = document.getElementById('toast-container'); const toast = document.createElement('div'); let bgColor = 'bg-slate-800', icon = 'ℹ️'; if (type === 'error') { bgColor = 'bg-red-600'; icon = '❌'; } else if (type === 'success') { bgColor = 'bg-green-600'; icon = '✅'; } toast.className = `${bgColor} text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center space-x-2 space-x-reverse text-xs font-bold fade-in backdrop-blur-md bg-opacity-90`; toast.innerHTML = `<span>${icon}</span><span>${message}</span>`; container.appendChild(toast); setTimeout(() => { toast.classList.add('opacity-0', 'transition-opacity', 'duration-300'); setTimeout(() => toast.remove(), 300); }, 3000); }
 
-        // دالة لإظهار/إخفاء الفلاتر على الموبايل
-        function toggleFilters() {
-            const container = document.getElementById('filters-container');
-            const icon = document.getElementById('filter-toggle-icon');
-            const text = document.getElementById('filter-toggle-text');
-            container.classList.toggle('hidden');
-            if (container.classList.contains('hidden')) {
-                icon.classList.remove('rotate-180'); text.textContent = "إظهار الفلاتر";
-            } else {
-                icon.classList.add('rotate-180'); text.textContent = "إخفاء الفلاتر";
-            }
-        }
-
-        // نظام التنبيهات (Toast)
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            let bgColor = 'bg-slate-800', icon = 'ℹ️';
-            if (type === 'error') { bgColor = 'bg-red-600'; icon = '❌'; } else if (type === 'success') { bgColor = 'bg-green-600'; icon = '✅'; }
-            toast.className = `${bgColor} text-white px-4 py-2.5 rounded-lg shadow-lg flex items-center space-x-2 space-x-reverse text-xs font-bold fade-in backdrop-blur-md bg-opacity-90`;
-            toast.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.classList.add('opacity-0', 'transition-opacity', 'duration-300'); setTimeout(() => toast.remove(), 300); }, 3000);
-        }
-
-        if (db) { initDbSelector(); loadInvoices(); }
+        if (db) { initDbSelector(); loadInvoices(); changeLanguage(currentLang); }
     </script>
 </body>
 </html>
